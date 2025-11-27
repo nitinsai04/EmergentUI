@@ -94,7 +94,7 @@ const ResultsViewer = ({ results, params, onExport }) => {
       {/* Main Velocity Chart */}
       <Card className="border-border shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base font-medium">Angular Velocity (ω)</CardTitle>
+          <CardTitle className="text-base font-medium">Digital Twin Ground Truth vs Virtual Sensor Output</CardTitle>
         </CardHeader>
         <CardContent className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -114,7 +114,7 @@ const ResultsViewer = ({ results, params, onExport }) => {
               <Line 
                 type="monotone" 
                 dataKey="omega_true" 
-                name="True Velocity" 
+                name="True State (Twin)" 
                 stroke="hsl(var(--secondary))" 
                 strokeWidth={2} 
                 dot={false} 
@@ -123,7 +123,7 @@ const ResultsViewer = ({ results, params, onExport }) => {
               <Line 
                 type="monotone" 
                 dataKey="omega_sensor" 
-                name="Sensor Reading" 
+                name="Measured Value (Sensor)" 
                 stroke="hsl(var(--primary))" 
                 strokeWidth={2} 
                 strokeDasharray="5 5" 
@@ -146,7 +146,7 @@ const ResultsViewer = ({ results, params, onExport }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-border shadow-sm">
             <CardHeader>
-            <CardTitle className="text-base font-medium">Torque vs Load</CardTitle>
+            <CardTitle className="text-base font-medium">Motor Torque vs Load Torque (Twin Predicted Dynamics)</CardTitle>
             </CardHeader>
             <CardContent className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -180,7 +180,7 @@ const ResultsViewer = ({ results, params, onExport }) => {
 
         <Card className="border-border shadow-sm">
             <CardHeader>
-            <CardTitle className="text-base font-medium">Sensor Error Residual</CardTitle>
+            <CardTitle className="text-base font-medium">Sensor–Twin Residual (|Measured − True|)</CardTitle>
             </CardHeader>
             <CardContent className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -194,7 +194,7 @@ const ResultsViewer = ({ results, params, onExport }) => {
                 <Line 
                     type="monotone" 
                     dataKey={(d) => d.omega_sensor !== null ? Math.abs(d.omega_sensor - d.omega_true) : 0} 
-                    name="Absolute Error" 
+                    name="Residual Anomaly" 
                     stroke="hsl(var(--destructive))" 
                     strokeWidth={1.5} 
                     dot={false} 

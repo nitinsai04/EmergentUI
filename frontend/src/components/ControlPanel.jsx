@@ -20,10 +20,10 @@ const ControlPanel = ({ params, setParams, onRun, loading }) => {
       <div className="p-6 border-b border-border">
         <h2 className="text-xl font-bold flex items-center gap-2 text-primary">
           <Activity className="w-5 h-5" />
-          Simulation Control
+          Twin Control
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Configure digital twin parameters
+          Configure Digital Twin parameters
         </p>
       </div>
 
@@ -31,8 +31,8 @@ const ControlPanel = ({ params, setParams, onRun, loading }) => {
         <Tabs defaultValue="physics" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-4">
             <TabsTrigger value="physics">Physics</TabsTrigger>
-            <TabsTrigger value="faults">Faults</TabsTrigger>
-            <TabsTrigger value="attacks">Cyber</TabsTrigger>
+            <TabsTrigger value="faults">Phy. Faults</TabsTrigger>
+            <TabsTrigger value="attacks">Cyber Atk</TabsTrigger>
           </TabsList>
 
           {/* PHYSICS TAB */}
@@ -138,8 +138,11 @@ const ControlPanel = ({ params, setParams, onRun, loading }) => {
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium flex items-center gap-2 text-accent">
                         <AlertTriangle className="w-4 h-4" />
-                        Fault Injection
+                        Physical Fault Injection
                     </CardTitle>
+                    <CardDescription className="text-xs">
+                        Digital Twin domain
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
@@ -196,8 +199,11 @@ const ControlPanel = ({ params, setParams, onRun, loading }) => {
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium flex items-center gap-2 text-destructive">
                         <ShieldAlert className="w-4 h-4" />
-                        Cyber Attack
+                        Cyber Attack Injection
                     </CardTitle>
+                    <CardDescription className="text-xs">
+                        Sensor/Network domain
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">

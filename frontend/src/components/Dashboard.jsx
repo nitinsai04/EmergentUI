@@ -87,27 +87,37 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-[350px] flex-shrink-0 h-full">
-        <ControlPanel 
-            params={params} 
-            setParams={setParams} 
-            onRun={handleRunSimulation} 
-            loading={loading} 
-        />
+    <div className="flex h-screen w-full bg-background text-foreground overflow-hidden flex-col">
+      {/* Header Description */}
+      <div className="bg-card border-b border-border p-4 shadow-sm z-10">
+        <h1 className="text-lg font-bold text-primary">Digital Twin Platform: DC Motor–Pump Asset</h1>
+        <p className="text-sm text-muted-foreground mt-1 max-w-4xl">
+          This interface visualizes a Digital Twin of a DC Motor–Pump asset. The Twin computes physics-based ground truth while virtual sensors apply noise, degradation, and cyber-attacks. Residuals between them support anomaly detection and dataset generation.
+        </p>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 h-full overflow-hidden bg-background/50 relative">
-        {/* Grid Background Effect */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
-        
-        <ResultsViewer 
-            results={results} 
-            params={params}
-            onExport={handleExport}
-        />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <div className="w-[350px] flex-shrink-0 h-full border-r border-border">
+            <ControlPanel 
+                params={params} 
+                setParams={setParams} 
+                onRun={handleRunSimulation} 
+                loading={loading} 
+            />
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 h-full overflow-hidden bg-background/50 relative">
+            {/* Grid Background Effect */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+            
+            <ResultsViewer 
+                results={results} 
+                params={params}
+                onExport={handleExport}
+            />
+        </div>
       </div>
       <Toaster />
     </div>
