@@ -56,6 +56,10 @@ const ResultsViewer = ({ results, params, onExport }) => {
     omega_sensor: results.omega_sensor[i],
     torque: results.torque[i],
     load: results.load[i],
+    attack_type: results.attack_type?.[i],
+    attack_active: results.attack_active?.[i],
+    fault_type: results.fault_type?.[i],
+    fault_active: results.fault_active?.[i],
   }));
 
   return (

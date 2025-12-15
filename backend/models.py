@@ -25,3 +25,7 @@ class SimulationResult(BaseModel):
     omega_sensor: List[float]
     torque: List[float]
     load: List[float]
+    attack_type: List[str]
+    attack_active: List[int]
+    fault_type: List[str]
+    fault_active: List[int]

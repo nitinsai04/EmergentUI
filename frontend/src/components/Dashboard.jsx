@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
+const BACKEND_URL =
+  process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
 const API = `${BACKEND_URL}/api`;
 
 const Dashboard = () => {
@@ -20,14 +21,17 @@ const Dashboard = () => {
     dt: 0.05,
     duration: 20.0,
     noise_level: 0.05,
+
     fault_type: "None",
     fault_severity: 0.5,
     fault_start_time: 10.0,
+
     attack_type: "None",
     attack_magnitude: 2.0,
     attack_start_time: 15.0,
   });
 
+  // ---------------- Run Simulation ----------------
   const handleRunSimulation = async () => {
     setLoading(true);
     try {
@@ -37,88 +41,88 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Simulation failed:", error);
       toast.error("Simulation failed. Check backend connection.");
-      
-      // Fallback Mock Data for Prototype if Backend is down
-      // This ensures the UI is reviewable even if backend has issues
-      const mockTime = Array.from({ length: 100 }, (_, i) => i * 0.2);
-      setResults({
-        time: mockTime,
-        omega_true: mockTime.map(t => Math.sin(t) * 10 + 50),
-        omega_sensor: mockTime.map(t => Math.sin(t) * 10 + 50 + (Math.random() - 0.5)),
-        torque: mockTime.map(t => 5),
-        load: mockTime.map(t => 2),
-      });
     } finally {
       setLoading(false);
     }
   };
 
+  // ---------------- Export CSV / JSON ----------------
   const handleExport = (format) => {
     if (!results) return;
-    
-    const data = results.time.map((t, i) => ({
-        time: t,
-        omega_true: results.omega_true[i],
-        omega_sensor: results.omega_sensor[i],
-        torque: results.torque[i],
-        load: results.load[i]
-    }));
 
-    if (format === 'json') {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'simulation_data.json';
-        a.click();
+    const keys = Object.keys(results);
+
+    // Build row-wise dataset (time-aligned)
+    const rows = results.time.map((_, i) =>
+      Object.fromEntries(
+        keys.map((k) => [k, results[k][i]])
+      )
+    );
+
+    if (format === "json") {
+      const blob = new Blob(
+        [JSON.stringify(rows, null, 2)],
+        { type: "application/json" }
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "simulation_data.json";
+      a.click();
     } else {
-        // CSV
-        const headers = Object.keys(data[0]).join(',');
-        const rows = data.map(row => Object.values(row).join(',')).join('\n');
-        const csv = `${headers}\n${rows}`;
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'simulation_data.csv';
-        a.click();
+      const csv =
+        keys.join(",") +
+        "\n" +
+        rows.map((r) => keys.map((k) => r[k]).join(",")).join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "simulation_data.csv";
+      a.click();
     }
+
     toast.success(`Exported as ${format.toUpperCase()}`);
   };
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden flex-col">
-      {/* Header Description */}
+      {/* Header */}
       <div className="bg-card border-b border-border p-4 shadow-sm z-10">
-        <h1 className="text-lg font-bold text-primary">Digital Twin Platform: DC Motor–Pump Asset</h1>
+        <h1 className="text-lg font-bold text-primary">
+          Digital Twin Platform: DC Motor–Pump Asset
+        </h1>
         <p className="text-sm text-muted-foreground mt-1 max-w-4xl">
-          This interface visualizes a Digital Twin of a DC Motor–Pump asset. The Twin computes physics-based ground truth while virtual sensors apply noise, degradation, and cyber-attacks. Residuals between them support anomaly detection and dataset generation.
+          This interface visualizes a physics-based Digital Twin with virtual
+          sensors, physical faults, and cyber-attacks for robustness evaluation
+          and dataset generation.
         </p>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-[350px] flex-shrink-0 h-full border-r border-border">
-            <ControlPanel 
-                params={params} 
-                setParams={setParams} 
-                onRun={handleRunSimulation} 
-                loading={loading} 
-            />
+          <ControlPanel
+            params={params}
+            setParams={setParams}
+            onRun={handleRunSimulation}
+            loading={loading}
+          />
         </div>
 
         {/* Main Content */}
         <div className="flex-1 h-full overflow-hidden bg-background/50 relative">
-            {/* Grid Background Effect */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
-            
-            <ResultsViewer 
-                results={results} 
-                params={params}
-                onExport={handleExport}
-            />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+
+          <ResultsViewer
+            results={results}
+            params={params}
+            onExport={handleExport}
+          />
         </div>
       </div>
+
       <Toaster />
     </div>
   );
