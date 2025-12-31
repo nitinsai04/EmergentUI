@@ -46,6 +46,56 @@ const Dashboard = () => {
     }
   };
 
+  // ---------------- AI Report Generation ----------------
+  const handleGenerateReport = () => {
+    if (!results) return;
+
+    // Get the final state predictions
+    const lastStatus = results.ai_status_text[results.ai_status_text.length - 1];
+    const finalRul = results.ai_predicted_rul[results.ai_predicted_rul.length - 1];
+
+    const reportContent = `
+DIGITAL TWIN AI DIAGNOSTIC REPORT
+=================================
+Generated: ${new Date().toLocaleString()}
+
+SYSTEM SUMMARY:
+---------------
+Final Operational Status: ${lastStatus}
+Predicted Remaining Useful Life (RUL): ${finalRul.toFixed(2)} seconds
+
+INPUT PARAMETERS:
+-----------------
+- Motor Constant (Kt): ${params.Kt}
+- Voltage: ${params.voltage}V
+- Load Torque: ${params.load_torque}
+- Simulation Duration: ${params.duration}s
+
+ANOMALY CONFIGURATION:
+----------------------
+- Fault Type: ${params.fault_type}
+- Attack Type: ${params.attack_type}
+- Attack Start Time: ${params.attack_start_time}s
+
+AI ANALYTICS FINDINGS:
+----------------------
+The XGBoost Classifier analyzed the sensor stream and flagged the system state as "${lastStatus}".
+The LSTM Prognostic model calculated a health trajectory resulting in ${finalRul.toFixed(2)}s of functional life.
+
+Status Warning: ${finalRul < 5 ? "CRITICAL - Maintenance Required Immediately" : "OPERATIONAL - No immediate action needed"}
+=================================
+END OF REPORT
+    `;
+
+    const blob = new Blob([reportContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `AI_Diagnostic_Report_${Date.now()}.txt`;
+    a.click();
+    toast.success("AI Summary Report Downloaded");
+  };
+
   // ---------------- Export CSV / JSON ----------------
   const handleExport = (format) => {
     if (!results) return;
@@ -119,6 +169,7 @@ const Dashboard = () => {
             results={results}
             params={params}
             onExport={handleExport}
+            onGenerateReport={handleGenerateReport} // PASSING THE NEW FUNCTION
           />
         </div>
       </div>
