@@ -29,6 +29,22 @@ class DigitalTwinSimulation:
         self.attack_magnitude = params.get("attack_magnitude", 0.0)
         self.attack_start_time = params.get("attack_start_time", 0.0)
 
+    def calculate_power(self, voltage, omega):
+        """
+        Calculates instantaneous current and power consumption.
+        """
+        # Back-EMF: V_emf = Ke * omega
+        v_back_emf = self.Ke * omega
+        # Ohm's Law: I = (V_supply - V_emf) / R
+        current = (voltage - v_back_emf) / self.R
+        
+        # Ensure current doesn't go below a small idle threshold
+        current = max(current, 0.05) 
+        
+        # Power P = V * I
+        power_watts = voltage * current
+        return current, power_watts
+
     def run(self) -> Dict[str, List]:
         steps = int(self.duration / self.dt)
         time = np.linspace(0, self.duration, steps)
@@ -42,6 +58,7 @@ class DigitalTwinSimulation:
         omega_true, omega_sensor = [], []
         current_true, current_sensor = [], []
         temp_true, temp_sensor = [], []
+        power_true = [] # New: Log power consumption
         
         attack_active_hist = []
         fault_active_hist = []
@@ -52,9 +69,8 @@ class DigitalTwinSimulation:
             current_b = self.b * (1 + self.fault_severity) if (fault_active and self.fault_type == "Bearing Friction") else self.b
             
             # 2. PHYSICS ENGINE (Multi-Modal)
-            # A. Electrical: I = (V - Ke*omega) / R
-            # The current depends on speed (Back-EMF effect)
-            current = (self.voltage - self.Ke * omega) / self.R
+            # A. Electrical & Power Calculation
+            current, p_watts = self.calculate_power(self.voltage, omega)
             
             # B. Mechanical: J*d_omega/dt = Kt*I - load - b*omega
             motor_torque = self.Kt * current
@@ -62,19 +78,18 @@ class DigitalTwinSimulation:
             omega += (net_torque / self.J) * self.dt
             
             # C. Thermal: dT/dt = (I^2 * R - cooling) / mass
-            # Joule heating creates temperature rise
             heat_generated = (current**2) * self.R
-            cooling = (temp - self.T_ambient) * 0.1 # Simple convective cooling
+            cooling = (temp - self.T_ambient) * 0.1 
             temp += ((heat_generated - cooling) / self.thermal_mass) * self.dt
 
-            # 3. SENSOR LAYER (Add Gaussian Noise to all 3)
+            # 3. SENSOR LAYER
             def add_noise(val): return val + np.random.normal(0, self.noise_level)
             
             m_speed = add_noise(omega)
             m_current = add_noise(current)
             m_temp = add_noise(temp)
 
-            # 4. ATTACK LAYER (Only Speed Sensor is usually hacked)
+            # 4. ATTACK LAYER
             attack_active = 1 if (t >= self.attack_start_time and self.attack_type != "None") else 0
             if attack_active:
                 if self.attack_type == "Sensor Spoofing":
@@ -88,6 +103,7 @@ class DigitalTwinSimulation:
             omega_true.append(omega); omega_sensor.append(m_speed)
             current_true.append(current); current_sensor.append(m_current)
             temp_true.append(temp); temp_sensor.append(m_temp)
+            power_true.append(p_watts) # Storing calculated power
             attack_active_hist.append(attack_active)
             fault_active_hist.append(fault_active)
 
@@ -96,6 +112,7 @@ class DigitalTwinSimulation:
             "omega_true": omega_true, "omega_sensor": omega_sensor,
             "current_true": current_true, "current_sensor": current_sensor,
             "temp_true": temp_true, "temp_sensor": temp_sensor,
+            "power_true": power_true,
             "attack_active": attack_active_hist,
             "fault_active": fault_active_hist
         }

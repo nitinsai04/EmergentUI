@@ -1,0 +1,13 @@
+
+    [OPERATION SUMMARY]
+    - Total Energy Consumption: 575.90 Joules
+    - Simulation Runtime:      7.98 seconds
+    
+    [SECURITY ANALYTICS]
+    - Status: RECOVERY ACTIVE
+    - Mitigation Accuracy:     0.4474 rad/s (RMSE)
+    
+    [VERDICT]
+    XGBoost effectively identified the sensor anomaly. 
+    The Resilient Control loop maintained stability.
+    
