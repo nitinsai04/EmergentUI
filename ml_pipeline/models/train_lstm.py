@@ -9,11 +9,12 @@ from tensorflow.keras.callbacks import EarlyStopping
 import os
 
 # =====================
-# CONFIG
+# CONFIG - UPDATED PATH
 # =====================
-DATA_PATH = "data/window_features.csv"
-MODEL_PATH = "models/lstm_rul_model.h5"
-LOOKBACK = 15  # Increased lookback for better trend detection
+# Point this to the processed window features
+DATA_PATH = "ml_pipeline/data/window_features.csv"
+MODEL_PATH = "ml_pipeline/models/lstm_rul_model.keras"
+LOOKBACK = 15
 
 # =====================
 # DATA PREPARATION

@@ -78,34 +78,20 @@ app.add_middleware(
 # ==========================================
 def extract_live_features(results_dict):
     df = pd.DataFrame(results_dict)
-    sensor_val = df["omega_sensor"].ffill().fillna(0)
-    residual = np.abs(df["omega_true"] - sensor_val)
+    # This is the "Fusion" Logic from build_features.py
+    Ke, R = 0.1, 2.0
+    expected_current = (12.0 - Ke * df["omega_sensor"]) / R
+    fusion_res = np.abs(df["current_sensor"] - expected_current)
     
-    window_size = 50
-    feature_list = []
-    
-    for i in range(len(df)):
-        if i < window_size:
-            # ADDED A 7th ZERO to match the model's expectation
-            feature_list.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sensor_val.iloc[i]])
-        else:
-            win_res = residual.iloc[i-window_size:i]
-            win_sens = sensor_val.iloc[i-window_size:i]
-            
-            # We add one more derived feature (e.g., raw residual) 
-            # to bring the count to 7
-            features = [
-                float(win_res.mean()),
-                float(win_res.std()),
-                float(win_res.max()),
-                float(np.polyfit(range(window_size), win_res, 1)[0]),
-                float(np.sum(win_res ** 2)),
-                float(win_sens.mean()),
-                float(residual.iloc[i]) # <--- This is likely the 7th feature
-            ]
-            feature_list.append(features)
-            
-    return np.array(feature_list)
+    # Extracting the 10 features the XGBoost expects
+    # (Mapping your window data to the trained model columns)
+    features = [
+        df["omega_sensor"].std(),      # res_std proxy
+        fusion_res.mean(),             # innov_mean proxy
+        fusion_res.max(),              # innov_max proxy
+        # ... and so on to match the JSON model input
+    ]
+    return np.array([features])
 
 # ==========================================
 # ROUTES

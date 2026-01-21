@@ -4,13 +4,17 @@ import os
 from scipy.stats import kurtosis, skew
 
 # =====================
-# CONFIG
+# CONFIG - UPDATED PATHS
 # =====================
-DATA_PATH = "data/all_simulations.csv"
-OUTPUT_PATH = "data/window_features.csv"
+# This matches exactly where batch_generate.py just saved the file
+DATA_PATH = "ml_pipeline/features/data/all_simulations.csv"
+OUTPUT_PATH = "ml_pipeline/data/window_features.csv"
+
+# Ensure the output directory exists
+os.makedirs("ml_pipeline/data", exist_ok=True)
 
 WINDOW_SIZE = 50 
-STRIDE = 10 
+STRIDE = 10
 
 # =====================
 # LOAD DATA

@@ -5,19 +5,20 @@ import numpy as np
 from pathlib import Path
 
 # ==========================================
-# PATH CONFIGURATION
+# PATH CONFIGURATION - FIXED
 # ==========================================
-CURRENT_DIR = Path(__file__).resolve().parent
-BACKEND_DIR = CURRENT_DIR.parent / "backend"
+CURRENT_DIR = Path(__file__).resolve().parent # points to ml_pipeline/features
+# Move up TWO levels to reach EmergentUI root, then into backend
+BACKEND_DIR = CURRENT_DIR.parent.parent / "backend" 
 sys.path.append(str(BACKEND_DIR))
 
-# Import the simulation class and the new Kalman Filter
 try:
     from simulation import DigitalTwinSimulation
-    from kalman_filter import MotorKalmanFilter # Imported from your backend folder
+    from kalman_filter import MotorKalmanFilter 
 except ImportError:
-    print("Error: Could not find simulation.py or kalman_filter.py in the backend folder.")
-    print(f"Path searched: {BACKEND_DIR}")
+    print(f"Error: Could not find files in {BACKEND_DIR}")
+    # This will help you see exactly where it's looking
+    print(f"Current Directory: {CURRENT_DIR}")
     sys.exit(1)
 
 # ==========================================

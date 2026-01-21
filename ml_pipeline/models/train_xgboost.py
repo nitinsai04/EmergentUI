@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 import os
 
 # =====================
-# CONFIG
+# CONFIG - UPDATED PATH
 # =====================
-DATA_PATH = "data/window_features.csv"
-MODEL_SAVE_PATH = "models/xgboost_attack_classifier.json"
+# Change this line to point to the correct subfolder
+DATA_PATH = "ml_pipeline/data/window_features.csv"
+MODEL_SAVE_PATH = "ml_pipeline/models/xgboost_attack_classifier.json"
 
 if not os.path.exists("models"):
     os.makedirs("models")
