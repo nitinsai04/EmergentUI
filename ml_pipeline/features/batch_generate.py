@@ -39,17 +39,17 @@ for run_id in range(N_RUNS):
     scenario = run_id % 5
 
     params = {
-        "duration": 5.0,
+        "duration": 8.0,
         "dt": 0.02,
         "fault_type": "None",
         "attack_type": "None",
-        "attack_magnitude": 1.5,
-        "attack_start_time": 2.5,
-        "fault_start_time": 1.0
+        "attack_magnitude": 5.0, # FIXED: Match demo
+        "attack_start_time": 4.0, # FIXED: Match demo
+        "fault_start_time": 1.0  # FIXED: Match demo
     }
 
     if scenario == 1:
-        params["fault_type"] = "Torque Drop"
+        params["fault_type"] = "Friction Buildup" # FIXED: Match simulation.py implementation
     elif scenario == 2:
         params["attack_type"] = "Sensor Spoofing"
     elif scenario == 3:
@@ -91,6 +91,10 @@ for run_id in range(N_RUNS):
 
     df["omega_kalman"] = kalman_estimates
     df["innovation"] = innovations
+
+    # Active indicator columns for feature labeling
+    df["attack_active"] = ((df["time"] >= params["attack_start_time"]) & (params[ "attack_type"] != "None")).astype(int)
+    df["fault_active"] = ((df["time"] >= params["fault_start_time"]) & (params["fault_type"] != "None")).astype(int)
 
     # RUL and Identity Tags
     total_time = df["time"].max()

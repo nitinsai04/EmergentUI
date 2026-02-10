@@ -18,9 +18,9 @@ try:
     from simulation import DigitalTwinSimulation
     from kalman_filter import MotorKalmanFilter
     from adaptive_engine import MotorParameterEstimator
-    print("✅ Backend modules loaded successfully.")
+    print("[OK] Backend modules loaded successfully.")
 except ImportError as e:
-    print(f"❌ Error: Could not find backend modules. Looking in: {BACKEND_DIR}")
+    print(f"[ERROR] Error: {BACKEND_DIR}")
     sys.exit(1)
 
 # ==========================================
@@ -30,79 +30,132 @@ MODEL_PATH = ROOT / "ml_pipeline" / "models" / "xgboost_attack_classifier.json"
 clf = xgb.XGBClassifier()
 clf.load_model(str(MODEL_PATH))
 
-def run_active_defense_simulation():
-    sim = DigitalTwinSimulation({
+def run_active_defense_simulation(override_params=None):
+    # Default Configuration
+    config = {
         "duration": 8.0, 
-        "attack_type": "Sensor Spoofing", 
-        "attack_start_time": 4.0,
-        "attack_magnitude": 5.0 
-    })
+        "attack_type": "Sensor Spoofing",
+        "attack_start_time": 3.0,
+        "attack_magnitude": 10.0, # Large magnitude to clearly show 3 distinct lines
+        "fault_type": "None",        # Options: "None", "Friction Buildup", "Bearing Fault"
+        "fault_start_time": 3.0
+    }
+    
+    # Apply Overrides
+    if override_params:
+        config.update(override_params)
+
+    # Simulation now includes Current and Back-EMF physics
+    sim = DigitalTwinSimulation(config)
     
     kf = MotorKalmanFilter()
     adaptive = MotorParameterEstimator()
     
     history, buffer = [], []
-    omega_prev, b_est = 0.0, 0.01
     dt = 0.02
+    omega_prev, b_est = 0.0, 0.1
+    
+    # Physics Constants for Fusion Check
+    KE, R_OHMS = 0.1, 2.0
+    
+    # We'll use a local 'x_ref' to maintain the defended state independent 
+    # of the filter's internal state if we want total isolation,
+    # but the Kalman Filter is already designed for this if we skip the update step.
+    
+    print(">>> Simulation started. Defense System Active...")
 
-    print("🚀 Simulation started. Running for 8 seconds...")
-
-    for t in np.arange(0, 8.0, dt):
-        raw_states = sim.run() 
-        idx = int(t / dt)
-        if idx >= len(raw_states["time"]): break
-            
-        z = raw_states["omega_sensor"][idx]
-        actual = raw_states["omega_true"][idx]
+    # We use sim.run() to get the full physical ground truth for the demo
+    raw_states = sim.run() 
+    
+    attack_detected_globally = False # Latch for detection
+    
+    for idx, t in enumerate(np.arange(0, 8.0, dt)):
+        if idx >= len(raw_states): break
+        
+        # Current States
+        z_speed = raw_states[idx]["omega_sensor"]
+        z_current = raw_states[idx]["current_sensor"]
+        actual = raw_states[idx]["omega_true"]
         voltage = 12.0
         
+        # 1. Update Kalman with the latest estimated friction
         kf.update_parameters(b=b_est)
-        est, innov = kf.filter(voltage, z)
         
-        res = np.abs(z - est)
-        buffer.append({"res": res, "innov": innov, "kalman": est})
+        # 2. SEPARATE Predict and Update for Resilience
+        # Predict (Purely physics based)
+        x_pred = kf.A @ kf.x + kf.B * voltage
+        kf.P = kf.A @ kf.P @ kf.A.T + kf.Q
+        innov = z_speed - (kf.H @ x_pred)
         
-        final_speed, attack_active = z, False
+        # 3. Physics-Electrical Consistency Check (Ohm's Law)
+        expected_curr = (voltage - KE * z_speed) / R_OHMS
+        curr_res = np.abs(z_current - expected_curr)
+        
+        # 4. Sliding Window Buffer
+        res_speed = np.abs(z_speed - float(x_pred[0][0]))
+        buffer.append({
+            "res": res_speed, 
+            "innov": float(innov[0][0]), 
+            "curr_res": curr_res, 
+            "kalman": float(x_pred[0][0])
+        })
+        
+        final_speed, attack_active = z_speed, False
         
         if len(buffer) >= 50:
             win = pd.DataFrame(buffer[-50:])
-            feats = pd.DataFrame([{
-                "res_mean": win["res"].mean(),
-                "res_std": win["res"].std(),
-                "innov_mean": win["innov"].mean(),
-                "innov_std": win["innov"].std(),
-                "innov_max": np.max(np.abs(win["innov"])),
-                "innov_kurtosis": kurtosis(win["innov"]),
-                "innov_skew": skew(win["innov"]),
-                "innov_crest": np.max(np.abs(win["innov"])) / (np.sqrt(np.mean(win["innov"]**2)) + 1e-6),
-                "res_slope": np.polyfit(range(50), win["res"], 1)[0],
-                "omega_kalman_mean": win["kalman"].mean()
-            }])
+            # Ensure ML pipeline is in path
+            ML_DIR = ROOT / "ml_pipeline"
+            if str(ML_DIR) not in sys.path:
+                sys.path.insert(0, str(ML_DIR))
             
-            # Predict & Explain (XAI)
+            from utils.feature_extractor import extract_features_from_window
+            feats = extract_features_from_window(win)
+            
+            # Predict & Act
             pred = clf.predict(feats)[0]
             probs = clf.predict_proba(feats)[0]
             
-            if pred in [2, 3, 4]: 
+            if pred in [2, 3, 4] and np.max(probs) > 0.7: 
+                attack_detected_globally = True
                 attack_active = True
-                final_speed = est 
+                # RECOVERY: Do NOT update the filter state with the sensor.
+                # Use the prediction as the final state for this step.
+                kf.x = x_pred 
+                final_speed = float(kf.x[0][0])
                 
-                # Logic: Find the feature that is currently highest relative to its window
-                top_feature = feats.idxmax(axis=1).values[0]
-                if t % 0.5 < 0.02: # Print alert every 0.5s to avoid spamming
-                    print(f"⚠️  ALERT [{t:.2f}s]: Attack Detected! Reason: {top_feature} | Conf: {np.max(probs)*100:.1f}%")
+                if t % 0.5 < 0.02:
+                    relevant_feats = feats.drop(columns=["temp_mean", "temp_slope"], errors="ignore")
+                    top_reason = relevant_feats.idxmax(axis=1).values[0]
+                    print(f"[RECOVERY] [{t:.2f}s]: Attack detected. Reason: {top_reason} | Confidence: {np.max(probs)*100:.1f}%")
             else:
-                b_est, _ = adaptive.update(voltage, z, omega_prev, dt)
+                # NORMAL: Update the Kalman filter with the sensor data
+                S = kf.H @ kf.P @ kf.H.T + kf.R
+                K_gain = kf.P @ kf.H.T @ np.linalg.inv(S)
+                kf.x = x_pred + K_gain @ innov
+                kf.P = (np.eye(1) - K_gain @ kf.H) @ kf.P
+                final_speed = float(kf.x[0][0])
+                
+                # Only update physics model (RLS) if we are NOT under attack
+                b_est, _ = adaptive.update(voltage, z_speed, omega_prev, dt)
             
             buffer.pop(0)
+        else:
+            # Initial phase (no detection available yet)
+            S = kf.H @ kf.P @ kf.H.T + kf.R
+            K_gain = kf.P @ kf.H.T @ np.linalg.inv(S)
+            kf.x = x_pred + K_gain @ innov
+            kf.P = (np.eye(1) - K_gain @ kf.H) @ kf.P
+            final_speed = float(kf.x[0][0])
+            b_est, _ = adaptive.update(voltage, z_speed, omega_prev, dt)
 
         history.append({
             "time": t, 
             "actual": actual, 
-            "sensor": z, 
+            "sensor": z_speed, 
             "defended": final_speed, 
             "attack": attack_active,
-            "power": raw_states["power_true"][idx] 
+            "power": z_current * voltage  # P = I * V
         })
         omega_prev = final_speed
 
@@ -132,7 +185,7 @@ def generate_security_report(df):
     """
     print(report)
     with open("Security_Audit_Log.txt", "w") as f: f.write(report)
-    print("✅ Audit Log saved to 'Security_Audit_Log.txt'")
+    print("[OK] Audit Log saved to 'Security_Audit_Log.txt'")
 
 # ==========================================
 # 3. EXECUTION
@@ -148,13 +201,20 @@ if __name__ == "__main__":
     ax1.plot(df['time'], df['actual'], 'k--', label='True Speed (Ground Truth)')
     ax1.plot(df['time'], df['sensor'], 'r', label='Sensor Speed (Hacked)', alpha=0.3)
     ax1.plot(df['time'], df['defended'], 'g', label='Defended Speed (Digital Twin)', linewidth=2)
-    attack_times = df[df['attack'] == True]['time']
-    if not attack_times.empty:
-        ax1.axvspan(attack_times.min(), attack_times.max(), color='red', alpha=0.1, label='Attack Detected')
+    
+    # Precise Anomaly Shading (Prettier than xvspan)
+    ax1.fill_between(df['time'], 0, 30, where=df['attack'], color='red', alpha=0.1, label='Anomaly Detected')
+    
     ax1.set_title("Resilient Defense: Speed Correction")
     ax1.set_ylabel("Speed (rad/s)")
+    ax1.set_ylim(0, 30) # Fixed limit for cleaner visual
     ax1.legend()
     ax1.grid(True, alpha=0.3)
+    
+    # LOGICAL NOTE:
+    # The 'flat' green line is the mathematically correct resilient state.
+    # Previous versions showed a 'jump' because of parameter drift (K mismatch).
+    # Successful defense means the motor stays at its true speed regardless of the sensor.
 
     # Plot 2: Power
     ax2.plot(df['time'], df['power'], color='blue', label='Energy Consumption (W)')

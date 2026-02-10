@@ -1,7 +1,7 @@
 import numpy as np
 
 class MotorKalmanFilter:
-    def __init__(self, dt=0.02, J=0.01, b=0.1, K=0.01):
+    def __init__(self, dt=0.02, J=0.01, b=0.1, K=0.1):
         self.dt = dt
         self.J, self.b, self.K = J, b, K
         self.x = np.array([[0.0]]) # State: Speed

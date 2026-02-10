@@ -1,118 +1,84 @@
 import numpy as np
-from typing import List, Dict
-import random
 
 class DigitalTwinSimulation:
-    def __init__(self, params: Dict):
-        # Existing Motor Params
-        self.Kt = params.get("Kt", 0.1)     # Torque constant
-        self.Ke = params.get("Ke", 0.1)     # Back-EMF constant
-        self.R = params.get("R", 2.0)       # Terminal Resistance (Ohms)
-        self.J = params.get("J", 10.0)      # Inertia
-        self.b = params.get("b", 0.01)      # Friction
+    def __init__(self, params):
+        self.dt = params.get("dt", 0.02)
+        self.duration = params.get("duration", 5.0)
         
-        # Environmental Params
-        self.T_ambient = params.get("T_ambient", 25.0) # Room temp
-        self.thermal_mass = params.get("thermal_mass", 50.0) 
+        # Physics Parameters
+        self.J = 0.01  # Inertia
+        self.b = 0.1   # Friction
+        self.K = 0.1   # Torque Constant (Should match Ke approx)
+        self.R = 2.0   # Resistance (Ohms) - NEW
+        self.Ke = 0.1  # Back-EMF Constant - NEW
         
-        self.load_torque = params.get("load_torque", 0.5)
-        self.voltage = params.get("voltage", 12.0)
-        self.dt = params.get("dt", 0.01)
-        self.duration = params.get("duration", 10.0)
-        self.noise_level = params.get("noise_level", 0.05)
-
-        # Fault & Attack Config
-        self.fault_type = params.get("fault_type", "None")
-        self.fault_severity = params.get("fault_severity", 0.0)
-        self.fault_start_time = params.get("fault_start_time", 0.0)
+        # State Variables
+        # State Variables
+        self.omega_true = 0.0
+        self.voltage = 12.0
+        self.temp = 25.0 # Ambient Temp (deg C)
+        
+        # Attack/Fault Parameters
         self.attack_type = params.get("attack_type", "None")
-        self.attack_magnitude = params.get("attack_magnitude", 0.0)
-        self.attack_start_time = params.get("attack_start_time", 0.0)
-
-    def calculate_power(self, voltage, omega):
-        """
-        Calculates instantaneous current and power consumption.
-        """
-        # Back-EMF: V_emf = Ke * omega
-        v_back_emf = self.Ke * omega
-        # Ohm's Law: I = (V_supply - V_emf) / R
-        current = (voltage - v_back_emf) / self.R
+        self.attack_start = params.get("attack_start_time", 2.0)
+        self.mag = params.get("attack_magnitude", 0.0)
         
-        # Ensure current doesn't go below a small idle threshold
-        current = max(current, 0.05) 
+        # Physical Fault Parameters
+        self.fault_type = params.get("fault_type", "None")
+        self.fault_start = params.get("fault_start_time", 1.0)
+        self.noise_level = params.get("noise_level", 0.1) # Default 0.1
+
+    def step(self, t):
+        # 1. Calculate True Physics (Mechanical)
+        # Torque = J*alpha + b*omega => alpha = (K*V - b*omega)/J
+        alpha = (self.K * self.voltage - self.b * self.omega_true) / self.J
+        self.omega_true += alpha * self.dt
+
+        # 2. Calculate True Physics (Electrical) - NEW
+        # Ohm's Law: V = I*R + Ke*omega => I = (V - Ke*omega) / R
+        true_current = (self.voltage - self.Ke * self.omega_true) / self.R
         
-        # Power P = V * I
-        power_watts = voltage * current
-        return current, power_watts
+        # 2a. Inject Physical Faults
+        if t >= self.fault_start:
+            if self.fault_type == "Friction Buildup":
+                # Linear increase in friction - Aggressive for Demo
+                self.b += 0.05 * self.dt  # 10x faster degradation
+            elif self.fault_type == "Bearing Fault":
+                self.omega_true += np.sin(t * 50) * 0.5
 
-    def run(self) -> Dict[str, List]:
-        steps = int(self.duration / self.dt)
-        time = np.linspace(0, self.duration, steps)
+        # 2b. Simulate Temperature Rise
+        power_loss = self.b * (self.omega_true ** 2)
+        k_heat, k_cool = 20.0, 0.1 # 10x more heat, less cooling
+        d_temp = (power_loss * k_heat - (self.temp - 25.0) * k_cool) * self.dt
+        self.temp += d_temp
 
-        # Initial States
-        omega = 0.0
-        temp = self.T_ambient
-        last_valid_speed = 0.0
+        # 3. Generate Sensor Data with Noise
+        sensor_speed = self.omega_true + np.random.normal(0, self.noise_level)
+        sensor_current = true_current + np.random.normal(0, 0.02)
+        sensor_temp = self.temp + np.random.normal(0, 0.5)
 
-        # Logs
-        omega_true, omega_sensor = [], []
-        current_true, current_sensor = [], []
-        temp_true, temp_sensor = [], []
-        power_true = [] # New: Log power consumption
-        
-        attack_active_hist = []
-        fault_active_hist = []
-
-        for t in time:
-            # 1. Check Faults
-            fault_active = 1 if (t >= self.fault_start_time and self.fault_type != "None") else 0
-            current_b = self.b * (1 + self.fault_severity) if (fault_active and self.fault_type == "Bearing Friction") else self.b
-            
-            # 2. PHYSICS ENGINE (Multi-Modal)
-            # A. Electrical & Power Calculation
-            current, p_watts = self.calculate_power(self.voltage, omega)
-            
-            # B. Mechanical: J*d_omega/dt = Kt*I - load - b*omega
-            motor_torque = self.Kt * current
-            net_torque = motor_torque - self.load_torque - current_b * omega
-            omega += (net_torque / self.J) * self.dt
-            
-            # C. Thermal: dT/dt = (I^2 * R - cooling) / mass
-            heat_generated = (current**2) * self.R
-            cooling = (temp - self.T_ambient) * 0.1 
-            temp += ((heat_generated - cooling) / self.thermal_mass) * self.dt
-
-            # 3. SENSOR LAYER
-            def add_noise(val): return val + np.random.normal(0, self.noise_level)
-            
-            m_speed = add_noise(omega)
-            m_current = add_noise(current)
-            m_temp = add_noise(temp)
-
-            # 4. ATTACK LAYER
-            attack_active = 1 if (t >= self.attack_start_time and self.attack_type != "None") else 0
-            if attack_active:
-                if self.attack_type == "Sensor Spoofing":
-                    m_speed += self.attack_magnitude
-                elif self.attack_type == "Freezing Sensor":
-                    m_speed = last_valid_speed
-            
-            last_valid_speed = m_speed
-
-            # 5. STORE
-            omega_true.append(omega); omega_sensor.append(m_speed)
-            current_true.append(current); current_sensor.append(m_current)
-            temp_true.append(temp); temp_sensor.append(m_temp)
-            power_true.append(p_watts) # Storing calculated power
-            attack_active_hist.append(attack_active)
-            fault_active_hist.append(fault_active)
+        # 4. Apply Cyber Attacks
+        if t >= self.attack_start:
+            if self.attack_type == "Sensor Spoofing":
+                sensor_speed += self.mag
+            elif self.attack_type == "Freezing Sensor":
+                # Concept: sensor stops updating (logic handled in run loop usually)
+                pass 
+            elif self.attack_type == "Packet Dropout":
+                sensor_speed = np.nan
 
         return {
-            "time": time.tolist(),
-            "omega_true": omega_true, "omega_sensor": omega_sensor,
-            "current_true": current_true, "current_sensor": current_sensor,
-            "temp_true": temp_true, "temp_sensor": temp_sensor,
-            "power_true": power_true,
-            "attack_active": attack_active_hist,
-            "fault_active": fault_active_hist
+            "time": t,
+            "omega_true": self.omega_true,
+            "omega_sensor": sensor_speed,
+            "current_true": true_current,     # NEW
+            "current_sensor": sensor_current, # NEW
+            "voltage": self.voltage,
+            "temp_sensor": sensor_temp        # NEW for RUL
         }
+
+    def run(self):
+        data = []
+        for t in np.arange(0, self.duration, self.dt):
+            data.append(self.step(t))
+        return data

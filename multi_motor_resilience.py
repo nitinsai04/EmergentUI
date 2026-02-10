@@ -5,7 +5,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 from pathlib import Path
-from scipy.stats import kurtosis
+from scipy.stats import kurtosis, skew
 
 # PATH CONFIGURATION
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -55,25 +55,37 @@ def run_swarm_simulation():
 
     for t in np.arange(0, 6.0, 0.02):
         # 1. Get States
-        state_a = sim_a.get_state_at_time(t)
-        state_b = sim_b.get_state_at_time(t)
+        state_a = sim_a.step(t)
+        state_b = sim_b.step(t)
         
         # 2. Kalman Filtering for both
         est_a, innov_a = kf_a.filter(12.0, state_a["omega_sensor"])
         est_b, innov_b = kf_b.filter(12.0, state_b["omega_sensor"])
         
-        # 3. Decision Logic for Motor A
+        # 3. Physics Check for Motor A
+        KE, R_OHMS = 0.1, 2.0
+        expected_curr_a = (12.0 - KE * state_a["omega_sensor"]) / R_OHMS
+        curr_res_a = np.abs(state_a["current_sensor"] - expected_curr_a)
+        
+        # 4. Decision Logic for Motor A
         defended_a = state_a["omega_sensor"]
-        buffer_a.append({"res": np.abs(state_a["omega_sensor"] - est_a), "innov": innov_a})
+        buffer_a.append({
+            "res": np.abs(state_a["omega_sensor"] - est_a), 
+            "innov": innov_a, 
+            "est": est_a,
+            "curr_res": curr_res_a
+        })
         
         if len(buffer_a) >= window_size:
             win_df = pd.DataFrame(buffer_a[-window_size:])
-            feat = {"res_mean": win_df["res"].mean(), "res_std": win_df["res"].std(),
-                    "innov_mean": win_df["innov"].mean(), "innov_std": win_df["innov"].std(),
-                    "innov_max": np.max(np.abs(win_df["innov"])), "innov_kurtosis": kurtosis(win_df["innov"]),
-                    "res_slope": np.polyfit(range(window_size), win_df["res"], 1)[0]}
             
-            pred_a = clf.predict(pd.DataFrame([feat]))[0]
+            # Use unified feature extractor
+            import sys
+            sys.path.insert(0, str(CURRENT_DIR / "ml_pipeline"))
+            from utils.feature_extractor import extract_features_from_window
+            feat = extract_features_from_window(win_df)
+            
+            pred_a = clf.predict(feat)[0]
             if pred_a in [2, 3, 4]: defended_a = est_a # Apply Active Defense
             buffer_a.pop(0)
 

@@ -8,7 +8,7 @@ from scipy.stats import kurtosis, skew
 
 # PATH CONFIGURATION
 CURRENT_DIR = Path(__file__).resolve().parent
-BACKEND_DIR = CURRENT_DIR.parent / "backend"
+BACKEND_DIR = CURRENT_DIR / "backend"
 sys.path.append(str(BACKEND_DIR))
 
 try:
@@ -21,7 +21,7 @@ except ImportError:
 # ==========================================
 # LOAD CLASSIFIER
 # ==========================================
-MODEL_PATH = CURRENT_DIR / "models" / "xgboost_attack_classifier.json"
+MODEL_PATH = CURRENT_DIR / "ml_pipeline" / "models" / "xgboost_attack_classifier.json"
 clf = xgb.XGBClassifier()
 if os.path.exists(MODEL_PATH):
     clf.load_model(str(MODEL_PATH))
@@ -32,20 +32,11 @@ else:
 # ==========================================
 # FEATURE EXTRACTION HELPER
 # ==========================================
-def extract_live_features(window_df):
-    """Calculates features from a 15-step window for XGBoost"""
-    res = np.abs(window_df["omega_sensor"] - window_df["omega_kalman"])
-    innov = window_df["innovation"]
-    
-    return {
-        "res_mean": np.mean(res),
-        "res_std": np.std(res),
-        "innov_mean": np.mean(innov),
-        "innov_std": np.std(innov),
-        "innov_max": np.max(np.abs(innov)),
-        "innov_kurtosis": kurtosis(innov),
-        "res_slope": np.polyfit(range(len(res)), res, 1)[0] if len(res) > 1 else 0
-    }
+# ==========================================
+# FEATURE EXTRACTION HELPER
+# ==========================================
+sys.path.append(str(CURRENT_DIR / "ml_pipeline"))
+from utils.feature_extractor import extract_features_from_window, calculate_fusion_residual
 
 # ==========================================
 # ACTIVE DEFENSE SIMULATION
@@ -75,17 +66,23 @@ def run_resilient_demo(attack_type="Sensor Spoofing"):
     for t in np.arange(0, params["duration"], params["dt"]):
         # 1. Get Physical and Sensor State from Simulation
         # (In a real system, 'sim.step' would be the actual motor hardware)
-        raw_state = sim.get_state_at_time(t) 
+        raw_state = sim.step(t) 
         z_val = raw_state["omega_sensor"]
+        current_sensor = raw_state["current_sensor"]
         
         # 2. Kalman Update
         est, innov = kf.filter(12.0, z_val if not np.isnan(z_val) else 0.0)
         
+        # Physics Check (needed for unified features)
+        curr_res = calculate_fusion_residual(12.0, z_val, current_sensor)
+        res_speed = np.abs(z_val - est)
+
         # 3. Manage Window for XGBoost
         step_data = {
-            "omega_sensor": z_val,
-            "omega_kalman": est,
-            "innovation": innov
+            "res": res_speed,
+            "innov": innov,
+            "curr_res": curr_res,
+            "kalman": est
         }
         window_buffer.append(step_data)
         if len(window_buffer) > lookback:
@@ -93,8 +90,8 @@ def run_resilient_demo(attack_type="Sensor Spoofing"):
 
         # 4. XGBOOST GATEKEEPER (Active Defense)
         if len(window_buffer) == lookback:
-            feat_dict = extract_live_features(pd.DataFrame(window_buffer))
-            feat_df = pd.DataFrame([feat_dict])
+            win_df = pd.DataFrame(window_buffer)
+            feat_df = extract_features_from_window(win_df)
             
             # Prediction: 0=Normal, 1=Fault, 2=Spoofing, 3=Dropout, 4=Freeze
             prediction = clf.predict(feat_df)[0]

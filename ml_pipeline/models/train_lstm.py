@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import joblib
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -9,32 +10,38 @@ from tensorflow.keras.callbacks import EarlyStopping
 import os
 
 # =====================
-# CONFIG - UPDATED PATH
+# 1. CONFIG & PATHS
 # =====================
-# Point this to the processed window features
 DATA_PATH = "ml_pipeline/data/window_features.csv"
 MODEL_PATH = "ml_pipeline/models/lstm_rul_model.keras"
-LOOKBACK = 15
+SCALER_PATH = "ml_pipeline/models/lstm_scaler.joblib"
+LOOKBACK = 15 # Sequence length (15 windows of history)
+
+os.makedirs("ml_pipeline/models", exist_ok=True)
 
 # =====================
-# DATA PREPARATION
+# 2. DATA PREPARATION
 # =====================
 if not os.path.exists(DATA_PATH):
-    print(f"Error: {DATA_PATH} not found. Run build_windows.py first.")
+    print(f"❌ Error: {DATA_PATH} not found.")
     exit()
 
 df = pd.read_csv(DATA_PATH).dropna()
 
-# IMPROVEMENT: Use the new Kalman and Advanced features
+# ENHANCED FEATURES: Now including Fusion and Thermal data
 features = [
-    "res_mean", "res_std", "innov_mean", "innov_std", 
-    "innov_max", "innov_kurtosis", "res_slope"
+    "innov_mean", "innov_std", "innov_kurtosis",
+    "fusion_res_mean", "fusion_res_std", # The new "Physics-Electrical" check
+    "temp_mean", "temp_slope"             # Crucial for health prediction
 ]
+
 X_raw = df[features].values
 y_raw = df["RUL"].values
 
+# Fit and save scaler for production
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X_raw)
+joblib.dump(scaler, SCALER_PATH)
 
 def create_sequences(data, target, lookback):
     X_seq, y_seq = [], []
@@ -47,27 +54,34 @@ X, y = create_sequences(X_scaled, y_raw, LOOKBACK)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # =====================
-# BUILD ENHANCED LSTM
+# 3. BUILD ENHANCED LSTM
 # =====================
+
+
 model = Sequential([
+    # First LSTM layer: Stays wide to capture initial features
     LSTM(64, input_shape=(X_train.shape[1], X_train.shape[2]), return_sequences=True),
-    BatchNormalization(), # IMPROVEMENT: Stability
+    BatchNormalization(),
     Dropout(0.2),
     
+    # Second LSTM layer: Compresses sequence info
     LSTM(32, return_sequences=False),
     Dropout(0.2),
     
+    # Fully connected layers for the regression output
     Dense(16, activation='relu'),
-    Dense(1, activation='linear') 
+    Dense(1, activation='linear') # Linear activation for RUL (continuous seconds)
 ])
 
 model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
 # =====================
-# TRAIN
+# 4. TRAINING
 # =====================
+# Patience is set to 7 to allow for some loss fluctuation
 stop = EarlyStopping(monitor='val_loss', patience=7, restore_best_weights=True)
 
+print("Training LSTM 'Health Monitor'...")
 history = model.fit(
     X_train, y_train,
     validation_data=(X_test, y_test),
@@ -78,32 +92,19 @@ history = model.fit(
 )
 
 # =====================
-# RUL COMPARISON OUTPUT
-# =====================
-# This section makes the results easy to understand
-predictions = model.predict(X_test)
-
-print("\n" + "="*40)
-print("RUL PREDICTION CHECK (Actual vs Predicted)")
-print("="*40)
-comparison_df = pd.DataFrame({
-    "Actual RUL (s)": y_test.flatten(),
-    "Predicted RUL (s)": predictions.flatten(),
-    "Error (s)": np.abs(y_test.flatten() - predictions.flatten())
-})
-
-# Print the first 10 results to see correctness
-print(comparison_df.head(10).to_string(index=False))
-print("="*40)
-
-# =====================
-# SAVE & PLOT
+# 5. EVALUATION & SAVE
 # =====================
 model.save(MODEL_PATH)
-plt.plot(history.history['mae'], label='Train MAE')
-plt.plot(history.history['val_mae'], label='Val MAE')
-plt.title('RUL Prediction Accuracy (MAE)')
-plt.ylabel('Seconds Error')
+print(f"✅ LSTM Model saved to {MODEL_PATH}")
+print(f"✅ Scaler saved to {SCALER_PATH}")
+
+# Plotting Accuracy Trend
+plt.figure(figsize=(10, 5))
+plt.plot(history.history['mae'], label='Training Error (MAE)')
+plt.plot(history.history['val_mae'], label='Validation Error (MAE)')
+plt.title('RUL Prediction Training History')
+plt.ylabel('Error in Seconds')
 plt.xlabel('Epoch')
 plt.legend()
+plt.grid(True, alpha=0.3)
 plt.show()
