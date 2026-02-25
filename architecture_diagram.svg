@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1380 660" width="1380" height="660" font-family="Arial, sans-serif">
+
+  <!-- Background -->
+  <rect width="1380" height="660" fill="#ffffff"/>
+
+  <!-- ─────────────────────────────────────────────
+       LAYER 1: SIMULATION LAYER
+  ───────────────────────────────────────────── -->
+  <rect x="20" y="20" width="290" height="620" rx="18" fill="white" stroke="black" stroke-width="2.5"/>
+  <text x="165" y="52" text-anchor="middle" font-size="14" font-weight="bold" letter-spacing="1">SIMULATION LAYER</text>
+
+  <!-- USER INPUTS diamond -->
+  <polygon points="165,85 225,120 165,155 105,120" fill="white" stroke="black" stroke-width="2"/>
+  <text x="165" y="115" text-anchor="middle" font-size="11" font-weight="bold">USER</text>
+  <text x="165" y="130" text-anchor="middle" font-size="11" font-weight="bold">INPUTS</text>
+
+  <!-- Arrow down -->
+  <line x1="165" y1="155" x2="165" y2="195" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- DIGITAL TWIN MODULE -->
+  <rect x="85" y="195" width="160" height="110" rx="12" fill="white" stroke="black" stroke-width="2"/>
+  <text x="165" y="235" text-anchor="middle" font-size="11" font-weight="bold">DIGITAL</text>
+  <text x="165" y="251" text-anchor="middle" font-size="11" font-weight="bold">TWIN</text>
+  <text x="165" y="267" text-anchor="middle" font-size="11" font-weight="bold">MODULE</text>
+  <text x="165" y="289" text-anchor="middle" font-size="9" fill="#555">Physics · Noise · Faults</text>
+
+  <!-- Down arrow to ATTACK INJECTION -->
+  <line x1="120" y1="305" x2="100" y2="395" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="72" y="355" text-anchor="middle" font-size="8" fill="#333">INJECT</text>
+  <text x="72" y="366" text-anchor="middle" font-size="8" fill="#333">ATTACKS</text>
+
+  <!-- Curved feedback arrow from ATTACK → TWIN -->
+  <path d="M 85 435 Q 45 370 85 305" fill="none" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ATTACK INJECTION box -->
+  <rect x="50" y="395" width="140" height="75" fill="white" stroke="black" stroke-width="2"/>
+  <text x="120" y="427" text-anchor="middle" font-size="11" font-weight="bold">ATTACK</text>
+  <text x="120" y="443" text-anchor="middle" font-size="11" font-weight="bold">INJECTION</text>
+  <text x="120" y="461" text-anchor="middle" font-size="8.5" fill="#555">Spoofing · Dropout · Freeze</text>
+
+  <!-- SENSOR OUTPUT (right side of digital twin) label -->
+  <text x="248" y="248" text-anchor="start" font-size="8" fill="#333">SENSOR</text>
+  <text x="248" y="260" text-anchor="start" font-size="8" fill="#333">DATA</text>
+
+  <!-- Arrow right from Digital Twin to Kalman -->
+  <line x1="245" y1="250" x2="325" y2="250" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+
+
+  <!-- ─────────────────────────────────────────────
+       LAYER 2: KALMAN FILTER LAYER  (NEW)
+  ───────────────────────────────────────────── -->
+  <rect x="330" y="20" width="270" height="620" rx="18" fill="white" stroke="black" stroke-width="2.5"/>
+  <text x="465" y="52" text-anchor="middle" font-size="14" font-weight="bold" letter-spacing="1">KALMAN LAYER</text>
+
+  <!-- KALMAN FILTER main box -->
+  <rect x="365" y="175" width="200" height="110" rx="12" fill="white" stroke="black" stroke-width="2.5"/>
+  <text x="465" y="215" text-anchor="middle" font-size="12" font-weight="bold">KALMAN</text>
+  <text x="465" y="232" text-anchor="middle" font-size="12" font-weight="bold">FILTER</text>
+  <text x="465" y="254" text-anchor="middle" font-size="8.5" fill="#555">State estimation</text>
+  <text x="465" y="268" text-anchor="middle" font-size="8.5" fill="#555">sensor − physics prediction</text>
+
+  <!-- Innovation signal label -->
+  <text x="465" y="305" text-anchor="middle" font-size="8" fill="#444">▼  INNOVATION SIGNAL</text>
+
+  <!-- Arrow down to Feature Extraction -->
+  <line x1="465" y1="285" x2="465" y2="335" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- FEATURE EXTRACTION box -->
+  <rect x="365" y="335" width="200" height="100" rx="12" fill="white" stroke="black" stroke-width="2"/>
+  <text x="465" y="368" text-anchor="middle" font-size="11" font-weight="bold">FEATURE</text>
+  <text x="465" y="384" text-anchor="middle" font-size="11" font-weight="bold">EXTRACTION</text>
+  <text x="465" y="403" text-anchor="middle" font-size="8.5" fill="#555">9 features · 50-step window</text>
+  <text x="465" y="418" text-anchor="middle" font-size="8.5" fill="#555">innov · fusion · temp · res</text>
+
+  <!-- Arrow right from Feature Extraction to Learning -->
+  <line x1="565" y1="385" x2="625" y2="385" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="590" y="378" text-anchor="middle" font-size="8" fill="#333">FEATURES</text>
+
+  <!-- ACTIVE DEFENSE GATEKEEPER box -->
+  <rect x="365" y="490" width="200" height="85" rx="10" fill="#f5f5f5" stroke="black" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="465" y="521" text-anchor="middle" font-size="10" font-weight="bold">ACTIVE DEFENSE</text>
+  <text x="465" y="537" text-anchor="middle" font-size="10" font-weight="bold">GATEKEEPER</text>
+  <text x="465" y="556" text-anchor="middle" font-size="8" fill="#555">Skips sensor update when</text>
+  <text x="465" y="568" text-anchor="middle" font-size="8" fill="#555">attack confidence &gt; 70%</text>
+
+  <!-- Arrow from Gatekeeper back up to Kalman Filter -->
+  <path d="M 365 532 Q 340 380 365 250" fill="none" stroke="black" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+  <text x="330" y="395" text-anchor="middle" font-size="8" fill="#333" transform="rotate(-90,330,395)">PHYSICS-ONLY MODE</text>
+
+
+  <!-- ─────────────────────────────────────────────
+       LAYER 3: LEARNING LAYER
+  ───────────────────────────────────────────── -->
+  <rect x="630" y="20" width="250" height="620" rx="18" fill="white" stroke="black" stroke-width="2.5"/>
+  <text x="755" y="52" text-anchor="middle" font-size="14" font-weight="bold" letter-spacing="1">LEARNING LAYER</text>
+
+  <!-- XGBOOST -->
+  <rect x="665" y="140" width="170" height="130" rx="14" fill="white" stroke="black" stroke-width="3"/>
+  <text x="750" y="192" text-anchor="middle" font-size="16" font-weight="bold">XG</text>
+  <text x="750" y="213" text-anchor="middle" font-size="16" font-weight="bold">BOOST</text>
+  <text x="750" y="238" text-anchor="middle" font-size="8.5" fill="#555">5-class classifier</text>
+  <text x="750" y="253" text-anchor="middle" font-size="8.5" fill="#555">Normal · Spoofing · Dropout</text>
+  <text x="750" y="266" text-anchor="middle" font-size="8.5" fill="#555">Freezing · Mechanical</text>
+
+  <!-- Arrow right from XGBoost (TYPE) -->
+  <line x1="835" y1="200" x2="900" y2="200" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="864" y="193" text-anchor="middle" font-size="9" font-weight="bold">TYPE</text>
+
+  <!-- Arrow down from XGBoost to Gatekeeper feedback -->
+  <line x1="700" y1="270" x2="700" y2="490" stroke="black" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+  <text x="678" y="385" text-anchor="middle" font-size="8" fill="#444" transform="rotate(-90,678,385)">GATEKEEPER SIGNAL</text>
+
+  <!-- Arrow from XGBoost gatekeeper down to Kalman layer -->
+  <line x1="665" y1="535" x2="570" y2="535" stroke="black" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+
+  <!-- XGBoost → Gatekeeper box in Learning -->
+  <rect x="665" y="490" width="170" height="60" rx="8" fill="#f5f5f5" stroke="black" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="750" y="517" text-anchor="middle" font-size="9" font-weight="bold">ATTACK DETECTED</text>
+  <text x="750" y="533" text-anchor="middle" font-size="8" fill="#555">Trigger gatekeeper</text>
+  <text x="750" y="545" text-anchor="middle" font-size="8" fill="#555">in Kalman layer</text>
+
+  <!-- LSTM -->
+  <rect x="665" y="310" width="170" height="120" rx="14" fill="white" stroke="black" stroke-width="2.5"/>
+  <text x="750" y="362" text-anchor="middle" font-size="18" font-weight="bold">LSTM</text>
+  <text x="750" y="385" text-anchor="middle" font-size="8.5" fill="#555">Health index (RUL)</text>
+  <text x="750" y="399" text-anchor="middle" font-size="8.5" fill="#555">Frozen during attacks</text>
+  <text x="750" y="413" text-anchor="middle" font-size="8.5" fill="#555">Monotonically decreasing</text>
+
+  <!-- Arrow right from LSTM (RUL) -->
+  <line x1="835" y1="365" x2="900" y2="365" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="864" y="358" text-anchor="middle" font-size="9" font-weight="bold">RUL</text>
+
+  <!-- Features feed into both XGBoost and LSTM -->
+  <line x1="625" y1="355" x2="665" y2="355" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+
+
+  <!-- ─────────────────────────────────────────────
+       LAYER 4: EXPLAINABILITY LAYER
+  ───────────────────────────────────────────── -->
+  <rect x="900" y="20" width="460" height="620" rx="18" fill="white" stroke="black" stroke-width="2.5"/>
+  <text x="1130" y="52" text-anchor="middle" font-size="14" font-weight="bold" letter-spacing="1">EXPLAINABILITY LAYER</text>
+
+  <!-- PREDICTED STATE ellipse -->
+  <ellipse cx="1050" cy="175" rx="105" ry="55" fill="white" stroke="black" stroke-width="2.5"/>
+  <text x="1050" y="168" text-anchor="middle" font-size="11" font-weight="bold">PREDICTED</text>
+  <text x="1050" y="185" text-anchor="middle" font-size="11" font-weight="bold">STATE</text>
+  <text x="1050" y="201" text-anchor="middle" font-size="8" fill="#555">Attack class · Health %</text>
+
+  <!-- Arrow from XGBoost TYPE to Predicted State -->
+  <!-- Already connected via line at x=900 -->
+  <text x="940" y="193" text-anchor="middle" font-size="8" fill="#444">ANALYSES ↓</text>
+
+  <!-- Arrow down to SHAP -->
+  <line x1="1050" y1="230" x2="1050" y2="295" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- SHAP box -->
+  <rect x="960" y="295" width="180" height="105" rx="14" fill="white" stroke="black" stroke-width="2.5"/>
+  <text x="1050" y="337" text-anchor="middle" font-size="16" font-weight="bold">SHAP</text>
+  <text x="1050" y="358" text-anchor="middle" font-size="8.5" fill="#555">Summary · Waterfall plots</text>
+  <text x="1050" y="373" text-anchor="middle" font-size="8.5" fill="#555">Per-feature contribution</text>
+  <text x="1050" y="388" text-anchor="middle" font-size="8.5" fill="#555">to classification decision</text>
+
+  <!-- Wavy arrow down -->
+  <path d="M 1050 400 Q 1020 425 1050 450 Q 1080 475 1050 500" fill="none" stroke="black" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="1090" y="455" text-anchor="start" font-size="8" fill="#333">EXPLAINS</text>
+
+  <!-- FEATURE INFLUENCE ellipse -->
+  <ellipse cx="1050" cy="545" rx="115" ry="60" fill="white" stroke="black" stroke-width="2.5"/>
+  <text x="1050" y="535" text-anchor="middle" font-size="11" font-weight="bold">FEATURE</text>
+  <text x="1050" y="552" text-anchor="middle" font-size="11" font-weight="bold">INFLUENCE</text>
+  <text x="1050" y="569" text-anchor="middle" font-size="8" fill="#555">innov_mean · temp_slope · etc.</text>
+
+  <!-- SHAP explanation panel (right side) -->
+  <rect x="1195" y="130" width="145" height="460" rx="12" fill="#fafafa" stroke="#aaa" stroke-width="1.5"/>
+  <text x="1267" y="158" text-anchor="middle" font-size="9" font-weight="bold">SHAP OUTPUT PANEL</text>
+  <line x1="1195" y1="165" x2="1340" y2="165" stroke="#ccc" stroke-width="1"/>
+  <text x="1267" y="185" text-anchor="middle" font-size="8" fill="#555">Summary plot</text>
+  <text x="1267" y="200" text-anchor="middle" font-size="8" fill="#555">(global importance)</text>
+  <line x1="1205" y1="212" x2="1330" y2="212" stroke="#ddd" stroke-width="0.5"/>
+  <text x="1267" y="228" text-anchor="middle" font-size="8" fill="#555">Waterfall plot</text>
+  <text x="1267" y="243" text-anchor="middle" font-size="8" fill="#555">(per-window decision)</text>
+  <line x1="1205" y1="255" x2="1330" y2="255" stroke="#ddd" stroke-width="0.5"/>
+  <text x="1267" y="272" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#333">Feature Cards</text>
+  <text x="1267" y="289" text-anchor="middle" font-size="7.5" fill="#777">innov_mean</text>
+  <text x="1267" y="303" text-anchor="middle" font-size="7.5" fill="#777">innov_std</text>
+  <text x="1267" y="317" text-anchor="middle" font-size="7.5" fill="#777">innov_kurtosis</text>
+  <text x="1267" y="331" text-anchor="middle" font-size="7.5" fill="#777">innov_crest</text>
+  <text x="1267" y="345" text-anchor="middle" font-size="7.5" fill="#777">fusion_res_mean</text>
+  <text x="1267" y="359" text-anchor="middle" font-size="7.5" fill="#777">fusion_res_std</text>
+  <text x="1267" y="373" text-anchor="middle" font-size="7.5" fill="#777">temp_mean</text>
+  <text x="1267" y="387" text-anchor="middle" font-size="7.5" fill="#777">temp_slope</text>
+  <text x="1267" y="401" text-anchor="middle" font-size="7.5" fill="#777">res_slope</text>
+  <line x1="1205" y1="413" x2="1330" y2="413" stroke="#ddd" stroke-width="0.5"/>
+  <text x="1267" y="430" text-anchor="middle" font-size="7.5" fill="#e55">Orange = pushed alarm</text>
+  <text x="1267" y="444" text-anchor="middle" font-size="7.5" fill="#55e">Blue = argued against</text>
+
+  <!-- Arrow from Feature Influence to SHAP panel -->
+  <line x1="1165" y1="520" x2="1193" y2="420" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrGrey)"/>
+
+  <!-- ─────────────────────────────────────────────
+       ARROW MARKERS
+  ───────────────────────────────────────────── -->
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="black"/>
+    </marker>
+    <marker id="arrGrey" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#aaa"/>
+    </marker>
+  </defs>
+
+  <!-- Bottom legend -->
+  <rect x="20" y="648" width="1340" height="1" fill="#ddd"/>
+  <text x="30" y="656" font-size="8" fill="#aaa">Solid arrows = data flow · Dashed arrows = control/feedback signals · Dashed boxes = conditional activation</text>
+
+</svg>
