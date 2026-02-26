@@ -19,12 +19,19 @@ def verify_scenarios():
         noise_std = df_normal['sensor'].std()
         
         # Check: Attack rate should be LOW (< 10%)
-        passed = attack_rate < 0.1
+        passed_attack = attack_rate < 0.1
+        
+        # Check: Fault detection rate should be LOW (< 10%)
+        fault_rate = (df_normal['attack_label'] == "Mechanical Fault").mean()
+        passed_fault = fault_rate < 0.1
+        
+        passed = passed_attack and passed_fault
         
         baseline_final_speed = df_normal['sensor'].iloc[-1]
         
         status = "PASSED" if passed else "FAILED"
         print(f"    - Attack Rate: {attack_rate*100:.1f}%")
+        print(f"    - False Fault Rate: {fault_rate*100:.1f}%")
         print(f"    - Noise Level: {noise_std:.4f}")
         print(f"    - Final Speed: {baseline_final_speed:.4f}")
         results.append(("1. Normal Operation", status))
@@ -57,7 +64,7 @@ def verify_scenarios():
     print("\n>>> Running Scenario: 4. Physical Fault: Friction Buildup...")
     try:
         # Use Normal noise (0.1) but aggressive friction
-        df_friction = run_active_defense_simulation({"fault_type": "Friction Buildup", "fault_start_time": 2.0})
+        df_friction = run_active_defense_simulation({"fault_type": "Friction Buildup", "fault_start_time": 2.0, "attack_type": "None"})
         friction_final_speed = df_friction['sensor'].iloc[-1]
         
         # Check: Final speed should be significantly LOWER than baseline (sag due to friction)
@@ -73,7 +80,7 @@ def verify_scenarios():
     # 5. Physical Fault: Bearing Fault
     print("\n>>> Running Scenario: 5. Physical Fault: Bearing Fault...")
     try:
-        df = run_active_defense_simulation({"fault_type": "Bearing Fault", "fault_start_time": 2.0})
+        df = run_active_defense_simulation({"fault_type": "Bearing Fault", "fault_start_time": 2.0, "attack_type": "None"})
         noise = df[df['time'] > 2.5]['sensor'].std()
         # Check: High variance due to vibration
         passed = noise > 0.2

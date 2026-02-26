@@ -82,3 +82,69 @@ class DigitalTwinSimulation:
         for t in np.arange(0, self.duration, self.dt):
             data.append(self.step(t))
         return data
+
+class CoupledMotorSimulation:
+    def __init__(self, params):
+        self.dt = params.get("dt", 0.02)
+        self.duration = params.get("duration", 8.0)
+        
+        # Shared Load Parameters
+        self.target_load_speed = params.get("target_speed", 12.0)
+        self.load_inertia = 0.05
+        self.load_friction = 0.2
+        self.omega_load = 0.0
+        
+        # Two Motors
+        self.motor_a = DigitalTwinSimulation({**params, "duration": self.duration, "dt": self.dt})
+        self.motor_b = DigitalTwinSimulation({**params, "duration": self.duration, "dt": self.dt, "attack_type": "None", "fault_type": "None"})
+        
+        # Control Gains
+        self.kp = 1.5
+        
+    def step(self, t):
+        # 1. Determine Control Action for each motor
+        # In a coupled system, motors try to maintain the load speed
+        err_a = self.target_load_speed - self.omega_load
+        err_b = self.target_load_speed - self.omega_load
+        
+        # Motor B is "Cooperative" - it monitors the load speed and works harder if it drops
+        # If Motor A is lagging (due to fault/attack), Motor B will see the speed drop and increase its torque
+        
+        self.motor_a.voltage = np.clip(12.0 + self.kp * err_a, 0, 24)
+        self.motor_b.voltage = np.clip(12.0 + self.kp * err_b, 0, 24)
+        
+        # 2. Step individual motors (internal physics)
+        res_a = self.motor_a.step(t)
+        res_b = self.motor_b.step(t)
+        
+        # 3. Update Shared Load Physics
+        # Total Torque = K_a*I_a + K_b*I_b - load_friction*omega_load
+        total_torque = (self.motor_a.K * res_a["current_true"] + 
+                        self.motor_b.K * res_b["current_true"])
+        
+        load_alpha = (total_torque - self.load_friction * self.omega_load) / self.load_inertia
+        self.omega_load += load_alpha * self.dt
+        
+        # Override motor speeds with coupled load speed (assuming rigid coupling)
+        # In a real system, there's some slip, but for this demo, they are locked.
+        self.motor_a.omega_true = self.omega_load
+        self.motor_b.omega_true = self.omega_load
+        
+        return {
+            "time": t,
+            "omega_load": self.omega_load,
+            "motor_a_sensor": res_a["omega_sensor"],
+            "motor_b_sensor": res_b["omega_sensor"],
+            "motor_a_voltage": self.motor_a.voltage,
+            "motor_b_voltage": self.motor_b.voltage,
+            "motor_a_current": res_a["current_sensor"],
+            "motor_b_current": res_b["current_sensor"],
+            "motor_a_temp": res_a["temp_sensor"],
+            "motor_b_temp": res_b["temp_sensor"]
+        }
+
+    def run(self):
+        data = []
+        for t in np.arange(0, self.duration, self.dt):
+            data.append(self.step(t))
+        return data

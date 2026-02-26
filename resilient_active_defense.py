@@ -116,7 +116,8 @@ def run_active_defense_simulation(override_params=None):
             pred = clf.predict(feats)[0]
             probs = clf.predict_proba(feats)[0]
             
-            if pred in [2, 3, 4] and np.max(probs) > 0.7: 
+            # TRIGGER: ML detection OR explicit sensor loss (NaN)
+            if (pred in [2, 3, 4] and np.max(probs) > 0.6) or np.isnan(z_speed): 
                 attack_detected_globally = True
                 attack_active = True
                 # RECOVERY: Do NOT update the filter state with the sensor.
@@ -149,12 +150,18 @@ def run_active_defense_simulation(override_params=None):
             final_speed = float(kf.x[0][0])
             b_est, _ = adaptive.update(voltage, z_speed, omega_prev, dt)
 
+        # Labels for analysis
+        LABELS = ["Normal", "Mechanical Fault", "Sensor Spoofing", "Packet Dropout", "Freezing Sensor"]
+        label_id = int(pred) if 'pred' in locals() else 0
+        current_label = LABELS[label_id] if attack_active or label_id == 1 else "Normal"
+
         history.append({
             "time": t, 
             "actual": actual, 
             "sensor": z_speed, 
             "defended": final_speed, 
             "attack": attack_active,
+            "attack_label": current_label,
             "power": z_current * voltage  # P = I * V
         })
         omega_prev = final_speed

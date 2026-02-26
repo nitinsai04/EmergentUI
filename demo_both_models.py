@@ -1,16 +1,21 @@
-"""
-Comprehensive Demo: XGBoost Attack Detection + LSTM RUL Prediction
-This script demonstrates both AI models working together in the Digital Twin system.
-"""
 import sys
 import pandas as pd
 import numpy as np
 import xgboost as xgb
 import matplotlib.pyplot as plt
 import joblib
+import time
+import random
 from pathlib import Path
 from scipy.stats import kurtosis
 from tensorflow.keras.models import load_model
+
+# FORCE ENTROPY: Ensure every run is truly unique
+seed = int((time.time() * 1000000) % 2**32)
+np.random.seed(seed)
+random.seed(seed)
+
+print(f"[SYSTEM] Entropy Seed Initialized: {seed}")
 
 # Path Configuration
 ROOT = Path(__file__).resolve().parent
@@ -44,14 +49,26 @@ ATTACK_LABELS = ["Normal", "Mechanical Fault", "Sensor Spoofing", "Packet Dropou
 
 def run_dual_model_demo():
     """Run simulation with both XGBoost and LSTM predictions."""
-    # Simulation with Sensor Spoofing Attack at t=4s
+    # SIMULATION PARAMETERS (HIGH VARIABILITY)
+    attack_start = np.random.uniform(3.0, 5.5)
+    attack_mag = np.random.uniform(4.5, 8.5)
+    fault_start = np.random.uniform(0.5, 2.5)
+    noise_lvl = np.random.uniform(0.08, 0.25)
+    
+    print(f"[CONFIG] Variability Applied:")
+    print(f"   - Attack Start: {attack_start:.2f}s")
+    print(f"   - Attack Mag:   {attack_mag:.2f}")
+    print(f"   - Fault Start:  {fault_start:.2f}s")
+    print(f"   - Sensor Noise: {noise_lvl:.3f}")
+
     sim = DigitalTwinSimulation({
         "duration": 8.0, 
         "attack_type": "Sensor Spoofing",
-        "attack_start_time": 4.0,
-        "attack_magnitude": 5.0,       # ALIGNED: Matches retraining magnitude
+        "attack_start_time": attack_start,
+        "attack_magnitude": attack_mag,
         "fault_type": "Friction Buildup",
-        "fault_start_time": 1.0
+        "fault_start_time": fault_start,
+        "noise_level": noise_lvl
     })
     
     kf = MotorKalmanFilter()
@@ -195,8 +212,12 @@ def visualize_results(df):
     ax1.plot(df['time'], df['actual'], 'k--', label='True Speed', linewidth=2)
     ax1.plot(df['time'], df['sensor'], 'r', label='Sensor (Hacked)', alpha=0.5)
     
-    attack_mask = df['attack_label'] != 'Normal'
-    ax1.fill_between(df['time'], 0, 20, where=attack_mask, color='red', alpha=0.1, label='Anomaly Detected')
+    # Multi-Tier Shading: Faults (Orange) vs Attacks (Red)
+    fault_mask = df['attack_label'] == 'Mechanical Fault'
+    attack_mask = df['attack_label'].str.contains("Spoofing|Dropout|Freeze")
+    
+    ax1.fill_between(df['time'], 0, 18, where=fault_mask, color='orange', alpha=0.15, label='Maintenance Required (Fault)')
+    ax1.fill_between(df['time'], 0, 18, where=attack_mask, color='red', alpha=0.15, label='Security Breach (Defense Active)')
     
     ax1.set_title("Motor Speed: Actual vs Sensor Reading", fontsize=14, fontweight='bold')
     ax1.set_ylabel("Speed (rad/s)")
