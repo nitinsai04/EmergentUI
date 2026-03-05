@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" width="900" height="460" font-family="Arial, sans-serif">
+  <rect width="900" height="460" fill="#ffffff" rx="16"/>
+
+  <!-- Title -->
+  <text x="450" y="38" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a" letter-spacing="2">MODULE 2 — ATTACK INJECTION</text>
+  <line x1="60" y1="50" x2="840" y2="50" stroke="#cbd5e1" stroke-width="1"/>
+
+  <!-- Clean sensor input -->
+  <rect x="60" y="90" width="140" height="60" rx="10" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="130" y="118" text-anchor="middle" font-size="10" font-weight="bold" fill="#15803d">CLEAN SENSOR</text>
+  <text x="130" y="135" text-anchor="middle" font-size="9" fill="#475569">ω + noise</text>
+
+  <!-- Arrow in -->
+  <line x1="200" y1="120" x2="268" y2="120" stroke="#64748b" stroke-width="1.5" marker-end="url(#sArr)"/>
+
+  <!-- Attack selector diamond -->
+  <polygon points="310,85 370,120 310,155 250,120" fill="#fff1f2" stroke="#ef4444" stroke-width="2"/>
+  <text x="310" y="115" text-anchor="middle" font-size="9" font-weight="bold" fill="#dc2626">ATTACK</text>
+  <text x="310" y="130" text-anchor="middle" font-size="9" font-weight="bold" fill="#dc2626">TYPE?</text>
+
+  <!-- Arrow to Spoofing -->
+  <line x1="370" y1="105" x2="445" y2="85" stroke="#ef4444" stroke-width="1.5" marker-end="url(#rArr)"/>
+
+  <!-- Arrow to Dropout -->
+  <line x1="370" y1="120" x2="445" y2="195" stroke="#a855f7" stroke-width="1.5" marker-end="url(#pArr)"/>
+
+  <!-- Arrow to Freeze -->
+  <line x1="370" y1="135" x2="445" y2="300" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#oArr)"/>
+
+  <!-- SENSOR SPOOFING -->
+  <rect x="445" y="55" width="210" height="110" rx="10" fill="#fff1f2" stroke="#ef4444" stroke-width="2"/>
+  <text x="550" y="82" text-anchor="middle" font-size="11" font-weight="bold" fill="#dc2626">SENSOR SPOOFING</text>
+  <line x1="460" y1="90" x2="640" y2="90" stroke="#fecaca" stroke-width="0.8"/>
+  <text x="460" y="108" font-size="8.5" fill="#475569">Formula:  ω_sensor  +=  magnitude</text>
+  <text x="460" y="124" font-size="8.5" fill="#475569">A fixed bias is added to the speed reading.</text>
+  <text x="460" y="140" font-size="8.5" fill="#475569">The motor appears to run faster or slower</text>
+  <text x="460" y="155" font-size="8.5" fill="#475569">than it actually is.</text>
+
+  <!-- PACKET DROPOUT -->
+  <rect x="445" y="170" width="210" height="110" rx="10" fill="#faf5ff" stroke="#a855f7" stroke-width="2"/>
+  <text x="550" y="197" text-anchor="middle" font-size="11" font-weight="bold" fill="#7e22ce">PACKET DROPOUT</text>
+  <line x1="460" y1="205" x2="640" y2="205" stroke="#e9d5ff" stroke-width="0.8"/>
+  <text x="460" y="223" font-size="8.5" fill="#475569">Formula:  ω_sensor  =  last_valid_value</text>
+  <text x="460" y="239" font-size="8.5" fill="#475569">Simulates lost network packets. Sensor</text>
+  <text x="460" y="255" font-size="8.5" fill="#475569">repeats its last known value randomly,</text>
+  <text x="460" y="271" font-size="8.5" fill="#475569">creating stale-data bursts.</text>
+
+  <!-- FREEZING SENSOR -->
+  <rect x="445" y="285" width="210" height="110" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+  <text x="550" y="312" text-anchor="middle" font-size="11" font-weight="bold" fill="#b45309">FREEZING SENSOR</text>
+  <line x1="460" y1="320" x2="640" y2="320" stroke="#fde68a" stroke-width="0.8"/>
+  <text x="460" y="338" font-size="8.5" fill="#475569">Formula:  ω_sensor  =  freeze_value</text>
+  <text x="460" y="354" font-size="8.5" fill="#475569">Sensor locks to a constant value — as if</text>
+  <text x="460" y="370" font-size="8.5" fill="#475569">the hardware has seized or the ADC has</text>
+  <text x="460" y="386" font-size="8.5" fill="#475569">saturated at a fixed reading.</text>
+
+  <!-- Merge arrows → Corrupted output -->
+  <line x1="655" y1="110" x2="740" y2="200" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <line x1="655" y1="225" x2="740" y2="220" stroke="#a855f7" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <line x1="655" y1="340" x2="740" y2="240" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4,2"/>
+
+  <!-- Corrupted output -->
+  <rect x="740" y="168" width="120" height="80" rx="10" fill="#fff1f2" stroke="#ef4444" stroke-width="2"/>
+  <text x="800" y="198" text-anchor="middle" font-size="10" font-weight="bold" fill="#dc2626">CORRUPTED</text>
+  <text x="800" y="215" text-anchor="middle" font-size="10" font-weight="bold" fill="#dc2626">SENSOR</text>
+  <text x="800" y="233" text-anchor="middle" font-size="8" fill="#475569">→ Kalman Layer</text>
+
+  <!-- None path -->
+  <line x1="250" y1="155" x2="130" y2="200" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="185" y="193" text-anchor="middle" font-size="8" fill="#94a3b8">None → pass through</text>
+
+  <!-- Legend -->
+  <line x1="60" y1="420" x2="840" y2="420" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="70" y="440" font-size="8" fill="#94a3b8">Attack starts at user-defined t_start and runs until end of simulation duration</text>
+  <text x="70" y="453" font-size="8" fill="#94a3b8">Only one attack type active at a time  ·  Ground truth (true ω) is never modified</text>
+
+  <defs>
+    <marker id="sArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#64748b"/>
+    </marker>
+    <marker id="rArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
+    </marker>
+    <marker id="pArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#a855f7"/>
+    </marker>
+    <marker id="oArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#f59e0b"/>
+    </marker>
+  </defs>
+</svg>

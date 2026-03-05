@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" font-family="Arial, sans-serif">
+  <rect width="1280" height="720" fill="#ffffff"/>
+
+  <!-- ── 8 NODES ── big, spaced out, bold text ── -->
+
+  <!-- USER -->
+  <rect x="30" y="290" width="160" height="80" rx="10" fill="#fff" stroke="#000" stroke-width="3"/>
+  <text x="110" y="338" text-anchor="middle" font-size="22" font-weight="bold" fill="#000">USER</text>
+
+  <!-- DIGITAL TWIN SIM -->
+  <rect x="240" y="255" width="200" height="100" rx="10" fill="#fff" stroke="#000" stroke-width="3"/>
+  <text x="340" y="298" text-anchor="middle" font-size="20" font-weight="bold" fill="#000">DIGITAL TWIN</text>
+  <text x="340" y="325" text-anchor="middle" font-size="20" font-weight="bold" fill="#000">SIMULATION</text>
+
+  <!-- KALMAN FILTER -->
+  <rect x="510" y="130" width="200" height="100" rx="10" fill="#fff" stroke="#000" stroke-width="3"/>
+  <text x="610" y="173" text-anchor="middle" font-size="20" font-weight="bold" fill="#000">KALMAN</text>
+  <text x="610" y="200" text-anchor="middle" font-size="20" font-weight="bold" fill="#000">FILTER</text>
+
+  <!-- FEATURE EXTRACTION -->
+  <rect x="510" y="420" width="200" height="100" rx="10" fill="#fff" stroke="#000" stroke-width="3"/>
+  <text x="610" y="463" text-anchor="middle" font-size="20" font-weight="bold" fill="#000">FEATURE</text>
+  <text x="610" y="490" text-anchor="middle" font-size="20" font-weight="bold" fill="#000">EXTRACTION</text>
+
+  <!-- XGBOOST -->
+  <rect x="790" y="130" width="200" height="100" rx="10" fill="#fff" stroke="#000" stroke-width="3"/>
+  <text x="890" y="188" text-anchor="middle" font-size="22" font-weight="bold" fill="#000">XGBoost</text>
+
+  <!-- LSTM -->
+  <rect x="790" y="420" width="200" height="100" rx="10" fill="#fff" stroke="#000" stroke-width="3"/>
+  <text x="890" y="478" text-anchor="middle" font-size="22" font-weight="bold" fill="#000">LSTM</text>
+
+  <!-- SHAP -->
+  <rect x="1070" y="130" width="180" height="100" rx="10" fill="#fff" stroke="#000" stroke-width="3"/>
+  <text x="1160" y="188" text-anchor="middle" font-size="22" font-weight="bold" fill="#000">SHAP</text>
+
+  <!-- DASHBOARD -->
+  <rect x="1070" y="380" width="180" height="100" rx="10" fill="#fff" stroke="#000" stroke-width="3"/>
+  <text x="1160" y="423" text-anchor="middle" font-size="18" font-weight="bold" fill="#000">MONITORING</text>
+  <text x="1160" y="448" text-anchor="middle" font-size="18" font-weight="bold" fill="#000">DASHBOARD</text>
+
+  <!-- ACTIVE DEFENSE (dashed) -->
+  <rect x="510" y="590" width="200" height="95" rx="10" fill="#f5f5f5" stroke="#555" stroke-width="2.5" stroke-dasharray="10,5"/>
+  <text x="610" y="630" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">ACTIVE</text>
+  <text x="610" y="655" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">DEFENSE</text>
+
+  <!-- ── ARROWS ── -->
+
+  <!-- USER → Digital Twin -->
+  <line x1="192" y1="330" x2="238" y2="312" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+
+  <!-- Digital Twin → Kalman: exit top-right corner, enter left of Kalman -->
+  <line x1="420" y1="257" x2="512" y2="195" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+  <rect x="388" y="207" width="90" height="24" rx="4" fill="#fff"/>
+  <text x="433" y="224" text-anchor="middle" font-size="16" font-weight="bold" fill="#000">ω_sensor</text>
+
+  <!-- Digital Twin → Feature Extraction: exit bottom-right, enter left of FE -->
+  <line x1="420" y1="348" x2="508" y2="452" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+  <rect x="348" y="398" width="120" height="24" rx="4" fill="#fff"/>
+  <text x="408" y="415" text-anchor="middle" font-size="16" font-weight="bold" fill="#000">current, temp</text>
+
+  <!-- Kalman → Feature Extraction: exit bottom, enter top -->
+  <line x1="610" y1="232" x2="610" y2="418" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+  <rect x="616" y="314" width="100" height="24" rx="4" fill="#fff"/>
+  <text x="666" y="331" font-size="16" font-weight="bold" fill="#000">innovation</text>
+
+  <!-- Feature Extraction → XGBoost: exit right, enter bottom-left of XGBoost -->
+  <line x1="712" y1="435" x2="788" y2="218" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+  <rect x="738" y="308" width="96" height="24" rx="4" fill="#fff"/>
+  <text x="786" y="325" text-anchor="middle" font-size="16" font-weight="bold" fill="#000">9 features</text>
+
+  <!-- Feature Extraction → LSTM: exit right, enter left -->
+  <line x1="712" y1="470" x2="788" y2="470" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+  <rect x="718" y="448" width="96" height="24" rx="4" fill="#fff"/>
+  <text x="766" y="465" text-anchor="middle" font-size="16" font-weight="bold" fill="#000">7 features</text>
+
+  <!-- XGBoost → SHAP: exit right, enter left -->
+  <line x1="992" y1="180" x2="1068" y2="180" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+
+  <!-- XGBoost → Dashboard: exit bottom, curve to left of Dashboard -->
+  <path d="M 890 232 Q 890 340 1068 420" fill="none" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+  <rect x="868" y="296" width="112" height="24" rx="4" fill="#fff"/>
+  <text x="924" y="313" text-anchor="middle" font-size="16" font-weight="bold" fill="#000">attack class</text>
+
+  <!-- LSTM → Dashboard: exit right, enter left -->
+  <line x1="992" y1="455" x2="1068" y2="435" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+  <rect x="998" y="432" width="66" height="24" rx="4" fill="#fff"/>
+  <text x="1031" y="449" text-anchor="middle" font-size="16" font-weight="bold" fill="#000">RUL %</text>
+
+  <!-- SHAP → Dashboard: exit bottom, enter top -->
+  <line x1="1160" y1="232" x2="1160" y2="378" stroke="#000" stroke-width="2.5" marker-end="url(#a)"/>
+  <rect x="1166" y="294" width="56" height="24" rx="4" fill="#fff"/>
+  <text x="1194" y="311" font-size="16" font-weight="bold" fill="#000">plots</text>
+
+  <!-- XGBoost → Active Defense (dashed): exit bottom, go to top-right of AD -->
+  <path d="M 890 232 Q 890 560 712 600" fill="none" stroke="#555" stroke-width="2.2" stroke-dasharray="8,5" marker-end="url(#ad)"/>
+  <rect x="856" y="430" width="100" height="24" rx="4" fill="#fff"/>
+  <text x="906" y="447" text-anchor="middle" font-size="16" font-weight="bold" fill="#555">attack flag</text>
+
+  <!-- Active Defense → Kalman (dashed feedback): exit left, hug left canvas edge, enter left of Kalman -->
+  <path d="M 510 637 Q 20 637 20 180 Q 20 130 508 165" fill="none" stroke="#555" stroke-width="2.2" stroke-dasharray="8,5" marker-end="url(#ad)"/>
+  <rect x="26" y="420" width="70" height="46" rx="4" fill="#fff"/>
+  <text x="61" y="439" text-anchor="middle" font-size="16" font-weight="bold" fill="#555">physics</text>
+  <text x="61" y="458" text-anchor="middle" font-size="16" font-weight="bold" fill="#555">override</text>
+
+  <!-- ── LEGEND bottom ── -->
+  <line x1="80" y1="700" x2="140" y2="700" stroke="#000" stroke-width="2.5"/>
+  <polygon points="140,696 150,700 140,704" fill="#000"/>
+  <text x="158" y="705" font-size="14" fill="#333">Data flow</text>
+
+  <line x1="310" y1="700" x2="370" y2="700" stroke="#555" stroke-width="2" stroke-dasharray="8,4"/>
+  <polygon points="370,696 380,700 370,704" fill="#555"/>
+  <text x="388" y="705" font-size="14" fill="#333">Control signal</text>
+
+  <rect x="560" y="690" width="38" height="20" rx="4" fill="#f5f5f5" stroke="#555" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="606" y="705" font-size="14" fill="#333">  Conditional process</text>
+
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#000"/>
+    </marker>
+    <marker id="ad" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#555"/>
+    </marker>
+  </defs>
+</svg>

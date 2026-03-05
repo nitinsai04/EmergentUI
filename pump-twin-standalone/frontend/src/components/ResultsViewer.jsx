@@ -27,7 +27,7 @@ const Panel = ({ title, children }) => (
   </div>
 );
 
-export default function ResultsViewer({ results, params }) {
+export default function ResultsViewer({ results, params, onExport }) {
   if (!results) {
     return (
       <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
@@ -104,9 +104,17 @@ export default function ResultsViewer({ results, params }) {
             {results.time.length} timesteps
           </p>
         </div>
-        <span className={`text-sm font-semibold px-3 py-1 rounded-full bg-slate-800 border border-slate-700 ${statusColor}`}>
-          {dominantLabel}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`text-sm font-semibold px-3 py-1 rounded-full bg-slate-800 border border-slate-700 ${statusColor}`}>
+            {dominantLabel}
+          </span>
+          <button
+            onClick={() => onExport("csv")}
+            className="text-xs px-3 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 transition-colors"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Chart 1: Speed */}
@@ -138,7 +146,7 @@ export default function ResultsViewer({ results, params }) {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
             <XAxis dataKey="t" tick={{ fontSize: 10, fill: "#64748b" }} />
-            <YAxis tick={{ fontSize: 10, fill: "#64748b" }} label={{ value: "Sec", angle: -90, position: "insideLeft", fill: "#64748b", fontSize: 10 }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "#64748b" }} label={{ value: "Health %", angle: -90, position: "insideLeft", fill: "#64748b", fontSize: 10 }} />
             <Tooltip content={<CustomTooltip />} />
             <Area type="monotone" dataKey="rul" stroke="#f97316" fill="url(#rulGrad)" name="RUL" dot={false} strokeWidth={1.5} />
           </AreaChart>

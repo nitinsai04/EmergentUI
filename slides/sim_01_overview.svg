@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="900" height="420" font-family="Arial, sans-serif">
+  <rect width="900" height="420" fill="#ffffff" rx="16"/>
+
+  <!-- Title -->
+  <text x="450" y="38" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a" letter-spacing="2">SIMULATION LAYER — OVERVIEW</text>
+  <line x1="60" y1="50" x2="840" y2="50" stroke="#cbd5e1" stroke-width="1"/>
+
+  <!-- USER INPUTS diamond -->
+  <polygon points="140,100 210,140 140,180 70,140" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+  <text x="140" y="135" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e293b">USER</text>
+  <text x="140" y="152" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e293b">INPUTS</text>
+
+  <!-- Arrow USER → TWIN -->
+  <line x1="210" y1="140" x2="290" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#sArr)"/>
+
+  <!-- DIGITAL TWIN MODULE -->
+  <rect x="290" y="90" width="180" height="100" rx="12" fill="#eff6ff" stroke="#3b82f6" stroke-width="2.5"/>
+  <text x="380" y="128" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d4ed8">DIGITAL TWIN</text>
+  <text x="380" y="147" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d4ed8">MODULE</text>
+  <text x="380" y="168" text-anchor="middle" font-size="9" fill="#475569">Physics · Noise · Faults</text>
+
+  <!-- Arrow TWIN down-left → ATTACK -->
+  <line x1="320" y1="190" x2="292" y2="262" stroke="#ef4444" stroke-width="1.5" marker-end="url(#rArr)"/>
+  <text x="268" y="232" text-anchor="middle" font-size="8" fill="#ef4444">INJECT</text>
+
+  <!-- ATTACK INJECTION -->
+  <rect x="200" y="263" width="180" height="80" rx="10" fill="#fff1f2" stroke="#ef4444" stroke-width="2"/>
+  <text x="290" y="297" text-anchor="middle" font-size="12" font-weight="bold" fill="#dc2626">ATTACK</text>
+  <text x="290" y="315" text-anchor="middle" font-size="12" font-weight="bold" fill="#dc2626">INJECTION</text>
+  <text x="290" y="333" text-anchor="middle" font-size="8.5" fill="#64748b">Spoofing · Dropout · Freeze</text>
+
+  <!-- Curved feedback ATTACK → TWIN -->
+  <path d="M 202 293 Q 152 220 290 162" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#rArr)"/>
+  <text x="158" y="245" text-anchor="middle" font-size="8" fill="#ef4444" transform="rotate(-58,158,245)">CORRUPTS</text>
+
+  <!-- Arrow TWIN → SENSOR OUTPUT -->
+  <line x1="470" y1="140" x2="558" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#sArr)"/>
+  <text x="514" y="130" text-anchor="middle" font-size="8" fill="#475569">SENSOR DATA</text>
+
+  <!-- SENSOR OUTPUT -->
+  <rect x="558" y="100" width="160" height="80" rx="10" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="638" y="135" text-anchor="middle" font-size="12" font-weight="bold" fill="#15803d">SENSOR</text>
+  <text x="638" y="153" text-anchor="middle" font-size="12" font-weight="bold" fill="#15803d">OUTPUT</text>
+  <text x="638" y="172" text-anchor="middle" font-size="8.5" fill="#475569">ω + noise [+ attack]</text>
+
+  <!-- Arrow SENSOR → Next layer -->
+  <line x1="718" y1="140" x2="820" y2="140" stroke="#22c55e" stroke-width="1.5" marker-end="url(#gArr)"/>
+  <text x="768" y="130" text-anchor="middle" font-size="8" fill="#15803d">→ Kalman Layer</text>
+
+  <!-- Ground truth dashed -->
+  <line x1="380" y1="190" x2="638" y2="263" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="558" y="263" width="160" height="70" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="638" y="293" text-anchor="middle" font-size="10" font-weight="bold" fill="#475569">GROUND TRUTH</text>
+  <text x="638" y="311" text-anchor="middle" font-size="8.5" fill="#94a3b8">True ω (never corrupted)</text>
+  <text x="638" y="326" text-anchor="middle" font-size="8.5" fill="#94a3b8">Used for RMSE evaluation</text>
+
+  <!-- Legend -->
+  <line x1="60" y1="375" x2="840" y2="375" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="70" y="395" font-size="8" fill="#94a3b8">Solid arrows = data flow  ·  Dashed arrows = corruption path  ·  Dashed box = evaluation reference only</text>
+
+  <defs>
+    <marker id="sArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#64748b"/>
+    </marker>
+    <marker id="rArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
+    </marker>
+    <marker id="gArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#22c55e"/>
+    </marker>
+  </defs>
+</svg>

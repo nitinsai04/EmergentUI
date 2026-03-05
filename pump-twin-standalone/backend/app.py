@@ -226,11 +226,11 @@ def _predict_rul(feat_df: pd.DataFrame) -> list:
         return [0.0] * len(feat_df)
     lookback    = LSTM_INPUT_SHAPE[1] if LSTM_INPUT_SHAPE[1] else 10
     n_lstm_feat = LSTM_INPUT_SHAPE[2] if LSTM_INPUT_SHAPE[2] else N_FEATURES
-    data = feat_df.values
-    if data.shape[1] > n_lstm_feat:
-        data = data[:, :n_lstm_feat]
-    elif data.shape[1] < n_lstm_feat:
-        data = np.hstack([data, np.zeros((len(data), n_lstm_feat - data.shape[1]))])
+    LSTM_FEATURES = ["innov_mean", "innov_std", "innov_kurtosis",
+                     "fusion_res_mean", "fusion_res_std", "temp_mean", "temp_slope"]
+    data = feat_df[LSTM_FEATURES].values
+    if lstm_scaler is not None:
+        data = lstm_scaler.transform(data)
     rul_preds = []
     for i in range(len(data)):
         window = np.zeros((lookback, n_lstm_feat))
@@ -348,6 +348,7 @@ def run_simulation(params: SimulationParams):
         np.random.seed(42)
         raw_results = sim.run()
         feat_df = extract_features(raw_results, dt=params.dt)
+        feat_df = feat_df.replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
         dmatrix = xgb.DMatrix(feat_df.values, feature_names=FEATURE_NAMES)
         raw_preds = clf.get_booster().predict(dmatrix)
@@ -359,6 +360,15 @@ def run_simulation(params: SimulationParams):
 
         dominant_class = Counter(attack_classes).most_common(1)[0][0]
         rul_preds = _predict_rul(feat_df)
+
+        # Normalize to 0–100 health index — first window = 100% baseline
+        baseline = rul_preds[0] if rul_preds and rul_preds[0] > 0 else (max(rul_preds) if rul_preds else 1.0)
+        rul_preds = [min(100.0, max(0.0, (p / baseline) * 100)) for p in rul_preds]
+        # Apply monotonicity — health can only decrease
+        for i in range(1, len(rul_preds)):
+            if rul_preds[i] > rul_preds[i - 1]:
+                rul_preds[i] = rul_preds[i - 1]
+
         summary_b64, waterfall_b64, top_features = _build_shap_images(feat_df, dominant_class)
 
         n_ts, n_win = len(raw_results), len(feat_df)

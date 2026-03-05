@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" width="900" height="480" font-family="Arial, sans-serif">
+  <rect width="900" height="480" fill="#ffffff" rx="16"/>
+
+  <!-- Title -->
+  <text x="450" y="38" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a" letter-spacing="2">MODULE 1 — DIGITAL TWIN (DC MOTOR ODE)</text>
+  <line x1="60" y1="50" x2="840" y2="50" stroke="#cbd5e1" stroke-width="1"/>
+
+  <!-- ODE Box -->
+  <rect x="60" y="68" width="390" height="248" rx="14" fill="#eff6ff" stroke="#3b82f6" stroke-width="2.5"/>
+  <text x="255" y="96" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d4ed8">DC MOTOR PHYSICS (ODE)</text>
+  <line x1="80" y1="106" x2="432" y2="106" stroke="#bfdbfe" stroke-width="1"/>
+
+  <!-- Mechanical equation -->
+  <text x="255" y="130" text-anchor="middle" font-size="11" fill="#475569">Mechanical:</text>
+  <text x="255" y="148" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e3a8a">J · dω/dt  =  K · V  −  b · ω</text>
+  <line x1="80" y1="158" x2="432" y2="158" stroke="#bfdbfe" stroke-width="0.8" stroke-dasharray="3,3"/>
+
+  <!-- Electrical equation -->
+  <text x="255" y="176" text-anchor="middle" font-size="11" fill="#475569">Electrical (Back-EMF):</text>
+  <text x="255" y="194" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e3a8a">I  =  (V − Ke · ω) / R</text>
+  <line x1="80" y1="204" x2="432" y2="204" stroke="#bfdbfe" stroke-width="0.8" stroke-dasharray="3,3"/>
+
+  <!-- Parameter table -->
+  <text x="100" y="222" font-size="9" fill="#475569">J = 0.01</text>
+  <text x="152" y="222" font-size="9" fill="#1e293b">Rotor inertia — resistance to speed change</text>
+  <text x="100" y="238" font-size="9" fill="#475569">K = 0.1</text>
+  <text x="152" y="238" font-size="9" fill="#1e293b">Torque constant — motor drive gain</text>
+  <text x="100" y="254" font-size="9" fill="#475569">b = 0.1</text>
+  <text x="152" y="254" font-size="9" fill="#1e293b">Friction coefficient — mechanical damping</text>
+  <text x="100" y="270" font-size="9" fill="#475569">V = 12.0</text>
+  <text x="152" y="270" font-size="9" fill="#1e293b">Supply voltage — user-controlled input</text>
+  <text x="100" y="286" font-size="9" fill="#475569">Ke = 0.1</text>
+  <text x="152" y="286" font-size="9" fill="#1e293b">Back-EMF constant — speed-to-voltage ratio</text>
+  <text x="100" y="302" font-size="9" fill="#475569">R = 2.0</text>
+  <text x="152" y="302" font-size="9" fill="#1e293b">Winding resistance (Ohms)</text>
+
+  <!-- Arrow ODE → Noise -->
+  <line x1="450" y1="190" x2="515" y2="190" stroke="#64748b" stroke-width="1.5" marker-end="url(#sArr)"/>
+  <text x="482" y="180" text-anchor="middle" font-size="8" fill="#475569">True ω, I</text>
+
+  <!-- NOISE INJECTION -->
+  <rect x="515" y="144" width="170" height="92" rx="10" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
+  <text x="600" y="174" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400e">GAUSSIAN</text>
+  <text x="600" y="191" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400e">NOISE</text>
+  <text x="600" y="211" text-anchor="middle" font-size="8.5" fill="#64748b">ω_s = ω + N(0, σ)</text>
+  <text x="600" y="224" text-anchor="middle" font-size="8.5" fill="#64748b">I_s = I + N(0, 0.02)</text>
+
+  <!-- Arrow NOISE → FAULT -->
+  <line x1="600" y1="236" x2="600" y2="290" stroke="#64748b" stroke-width="1.5" marker-end="url(#sArr)"/>
+
+  <!-- FAULT INJECTION -->
+  <rect x="515" y="290" width="170" height="90" rx="10" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="600" y="320" text-anchor="middle" font-size="11" font-weight="bold" fill="#c2410c">FAULT</text>
+  <text x="600" y="337" text-anchor="middle" font-size="11" font-weight="bold" fill="#c2410c">INJECTION</text>
+  <text x="600" y="357" text-anchor="middle" font-size="8.5" fill="#64748b">Friction Buildup · Bearing</text>
+  <text x="600" y="370" text-anchor="middle" font-size="8.5" fill="#64748b">Modifies b or adds impulses</text>
+
+  <!-- Arrow FAULT → OUTPUT -->
+  <line x1="685" y1="335" x2="762" y2="335" stroke="#64748b" stroke-width="1.5" marker-end="url(#sArr)"/>
+
+  <!-- OUTPUT -->
+  <rect x="762" y="296" width="110" height="78" rx="10" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="817" y="326" text-anchor="middle" font-size="10" font-weight="bold" fill="#15803d">SENSOR</text>
+  <text x="817" y="343" text-anchor="middle" font-size="10" font-weight="bold" fill="#15803d">SIGNAL</text>
+  <text x="817" y="362" text-anchor="middle" font-size="8" fill="#475569">Ready for pipeline</text>
+
+  <!-- Ground truth path -->
+  <line x1="450" y1="168" x2="762" y2="168" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="762" y="132" width="110" height="68" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="817" y="158" text-anchor="middle" font-size="10" font-weight="bold" fill="#475569">TRUE ω</text>
+  <text x="817" y="175" text-anchor="middle" font-size="8" fill="#94a3b8">Ground truth</text>
+  <text x="817" y="190" text-anchor="middle" font-size="8" fill="#94a3b8">for evaluation</text>
+
+  <!-- Description box bottom -->
+  <rect x="60" y="340" width="390" height="110" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="255" y="362" text-anchor="middle" font-size="10" font-weight="bold" fill="#334155">WHAT THIS MODULE DOES</text>
+  <text x="80" y="384" font-size="9" fill="#475569">•  Integrates both ODEs step-by-step using Euler's method (dt = 0.02 s)</text>
+  <text x="80" y="402" font-size="9" fill="#475569">•  Computes true motor speed (ω) and current (I) at every timestep</text>
+  <text x="80" y="420" font-size="9" fill="#475569">•  Adds Gaussian noise to simulate real sensor imperfection</text>
+  <text x="80" y="438" font-size="9" fill="#475569">•  Optionally degrades the motor via friction buildup or bearing fault</text>
+
+  <!-- Legend -->
+  <line x1="60" y1="460" x2="840" y2="460" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="70" y="474" font-size="8" fill="#94a3b8">Solid arrows = data flow  ·  Dashed line/box = ground truth path (not a sensor signal)</text>
+
+  <defs>
+    <marker id="sArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" width="900" height="440" font-family="Arial, sans-serif">
+  <rect width="900" height="440" fill="#ffffff" rx="16"/>
+
+  <!-- Title -->
+  <text x="450" y="38" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a" letter-spacing="2">MODULE 3 — MECHANICAL FAULT INJECTION</text>
+  <line x1="60" y1="50" x2="840" y2="50" stroke="#cbd5e1" stroke-width="1"/>
+
+  <!-- ODE input -->
+  <rect x="60" y="100" width="130" height="60" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="125" y="125" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">MOTOR ODE</text>
+  <text x="125" y="143" text-anchor="middle" font-size="9" fill="#475569">Parameters: J, b, Kt</text>
+
+  <!-- Arrow in -->
+  <line x1="190" y1="130" x2="258" y2="130" stroke="#64748b" stroke-width="1.5" marker-end="url(#sArr)"/>
+
+  <!-- Fault selector -->
+  <polygon points="305,95 370,130 305,165 240,130" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="305" y="124" text-anchor="middle" font-size="9" font-weight="bold" fill="#c2410c">FAULT</text>
+  <text x="305" y="140" text-anchor="middle" font-size="9" font-weight="bold" fill="#c2410c">TYPE?</text>
+
+  <!-- Arrow to Friction -->
+  <line x1="370" y1="115" x2="445" y2="95" stroke="#f97316" stroke-width="1.5" marker-end="url(#oArr)"/>
+
+  <!-- Arrow to Bearing -->
+  <line x1="370" y1="145" x2="445" y2="270" stroke="#ef4444" stroke-width="1.5" marker-end="url(#rArr)"/>
+
+  <!-- FRICTION BUILDUP -->
+  <rect x="445" y="60" width="230" height="145" rx="10" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="560" y="87" text-anchor="middle" font-size="11" font-weight="bold" fill="#c2410c">FRICTION BUILDUP</text>
+  <line x1="460" y1="95" x2="660" y2="95" stroke="#fed7aa" stroke-width="0.8"/>
+  <text x="460" y="113" font-size="8.5" fill="#475569">Effect:   b  →  b × (1 + severity × t)</text>
+  <text x="460" y="131" font-size="8.5" fill="#475569">The friction coefficient grows over time,</text>
+  <text x="460" y="148" font-size="8.5" fill="#475569">gradually slowing the motor below its</text>
+  <text x="460" y="165" font-size="8.5" fill="#475569">expected speed. Mimics wear on seals,</text>
+  <text x="460" y="182" font-size="8.5" fill="#475569">bushings, or lubrication breakdown.</text>
+
+  <!-- BEARING FAULT -->
+  <rect x="445" y="238" width="230" height="145" rx="10" fill="#fff1f2" stroke="#ef4444" stroke-width="2"/>
+  <text x="560" y="265" text-anchor="middle" font-size="11" font-weight="bold" fill="#dc2626">BEARING FAULT</text>
+  <line x1="460" y1="273" x2="660" y2="273" stroke="#fecaca" stroke-width="0.8"/>
+  <text x="460" y="291" font-size="8.5" fill="#475569">Effect:   ω  +=  A × sin(f × t)  (impulse)</text>
+  <text x="460" y="309" font-size="8.5" fill="#475569">Periodic vibration impulses are added to</text>
+  <text x="460" y="326" font-size="8.5" fill="#475569">the speed signal. Mimics rolling-element</text>
+  <text x="460" y="343" font-size="8.5" fill="#475569">bearing damage — a defect frequency</text>
+  <text x="460" y="360" font-size="8.5" fill="#475569">signature visible in the innovation signal.</text>
+
+  <!-- Merge to output -->
+  <line x1="675" y1="132" x2="755" y2="215" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <line x1="675" y1="310" x2="755" y2="235" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="4,2"/>
+
+  <!-- DEGRADED MOTOR output -->
+  <rect x="755" y="175" width="120" height="80" rx="10" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="815" y="205" text-anchor="middle" font-size="10" font-weight="bold" fill="#c2410c">DEGRADED</text>
+  <text x="815" y="222" text-anchor="middle" font-size="10" font-weight="bold" fill="#c2410c">MOTOR</text>
+  <text x="815" y="241" text-anchor="middle" font-size="8" fill="#475569">→ ODE output affected</text>
+
+  <!-- Key point box -->
+  <rect x="60" y="280" width="355" height="110" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="237" y="303" text-anchor="middle" font-size="10" font-weight="bold" fill="#334155">KEY DISTINCTION FROM CYBER ATTACKS</text>
+  <text x="80" y="323" font-size="9" fill="#475569">•  Faults modify the motor physics itself — the ODE changes</text>
+  <text x="80" y="341" font-size="9" fill="#475569">•  Attacks only corrupt the sensor reading — physics unchanged</text>
+  <text x="80" y="359" font-size="9" fill="#475569">•  XGBoost is trained to separate these two categories</text>
+  <text x="80" y="377" font-size="9" fill="#475569">•  Both can occur simultaneously in the simulation</text>
+
+  <!-- Legend -->
+  <line x1="60" y1="408" x2="840" y2="408" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="70" y="428" font-size="8" fill="#94a3b8">Fault starts at user-defined t_start  ·  Severity (0–1) controls how aggressively the motor degrades</text>
+
+  <defs>
+    <marker id="sArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#64748b"/>
+    </marker>
+    <marker id="oArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#f97316"/>
+    </marker>
+    <marker id="rArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
+    </marker>
+  </defs>
+</svg>

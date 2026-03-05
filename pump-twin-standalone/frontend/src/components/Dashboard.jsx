@@ -80,6 +80,25 @@ export default function Dashboard() {
     }
   };
 
+  const handleExport = (format) => {
+    if (!results) return;
+    const keys = Object.keys(results).filter((k) => Array.isArray(results[k]));
+    const rows = results.time.map((_, i) =>
+      Object.fromEntries(keys.map((k) => [k, results[k][i]]))
+    );
+    if (format === "json") {
+      const blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = "simulation_data.json"; a.click();
+    } else {
+      const csv = keys.join(",") + "\n" + rows.map((r) => keys.map((k) => r[k]).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = "simulation_data.csv"; a.click();
+    }
+    toast.success(`Exported as ${format.toUpperCase()}`);
+  };
+
   const handleModeChange = (m) => {
     setMode(m);
     if (m !== "simulate") setResults(null);
@@ -164,7 +183,7 @@ export default function Dashboard() {
               />
             </div>
             <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
-              <ResultsViewer results={results} params={params} />
+              <ResultsViewer results={results} params={params} onExport={handleExport} />
             </main>
           </>
         ) : (
