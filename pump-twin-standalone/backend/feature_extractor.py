@@ -73,16 +73,9 @@ def extract_features(sim_results: list, dt: float = 0.02) -> pd.DataFrame:
     # --- Sliding window feature extraction ---
     rows = []
     n = len(df)
-    step = max(1, WINDOW_SIZE // 2)
-
-    for start in range(0, n - WINDOW_SIZE + 1, step):
+    for start in range(0, n - WINDOW_SIZE + 1, 1):
         window = df.iloc[start : start + WINDOW_SIZE]
         rows.append(_features_from_window(window))
-
-    # Always include a window ending at the last timestep
-    if n >= WINDOW_SIZE:
-        final_window = df.iloc[n - WINDOW_SIZE : n]
-        rows.append(_features_from_window(final_window))
 
     if not rows:
         # Simulation too short for a full window — use all available data

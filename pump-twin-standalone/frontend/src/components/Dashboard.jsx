@@ -12,19 +12,19 @@ const BACKEND = process.env.REACT_APP_BACKEND_URL || "http://localhost:8002";
 
 const DEFAULT_PARAMS = {
   Kt: 0.1,
-  J: 10.0,
-  b: 0.01,
+  J: 0.01,
+  b: 0.1,
   load_torque: 0.5,
   voltage: 12.0,
-  dt: 0.05,
-  duration: 20.0,
+  dt: 0.02,
+  duration: 10.0,
   noise_level: 0.05,
   fault_type: "None",
   fault_severity: 0.5,
-  fault_start_time: 10.0,
+  fault_start_time: 5.0,
   attack_type: "None",
   attack_magnitude: 2.0,
-  attack_start_time: 15.0,
+  attack_start_time: 7.0,
 };
 
 const MODES = [

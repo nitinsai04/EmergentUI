@@ -231,16 +231,16 @@ def _predict_rul(feat_df: pd.DataFrame) -> list:
     data = feat_df[LSTM_FEATURES].values
     if lstm_scaler is not None:
         data = lstm_scaler.transform(data)
-    rul_preds = []
-    for i in range(len(data)):
-        window = np.zeros((lookback, n_lstm_feat))
+    n = len(data)
+    # Build all lookback windows in one shot, then single batched forward pass
+    windows = np.zeros((n, lookback, n_lstm_feat))
+    for i in range(n):
         if i < lookback:
-            window[lookback - i - 1:] = data[:i + 1]
+            windows[i, lookback - i - 1:] = data[:i + 1]
         else:
-            window = data[i - lookback:i]
-        pred = rul_model.predict(window.reshape(1, lookback, n_lstm_feat), verbose=0)
-        rul_preds.append(float(pred.flatten()[0]))
-    return rul_preds
+            windows[i] = data[i - lookback:i]
+    preds = rul_model.predict(windows, verbose=0, batch_size=512)
+    return preds.flatten().tolist()
 
 
 # ── Active-defense core (reused by /api/active-defense and /api/verify) ──────
@@ -364,14 +364,22 @@ def run_simulation(params: SimulationParams):
         feat_df = feat_df.replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
         dmatrix = xgb.DMatrix(feat_df.values, feature_names=FEATURE_NAMES)
-        raw_preds = clf.get_booster().predict(dmatrix)
-        if raw_preds.ndim == 1:
-            attack_classes = raw_preds.astype(int).tolist()
+        raw_preds = booster.predict(dmatrix)
+        n_win = len(feat_df)
+        if raw_preds.ndim == 2:
+            attack_classes = np.argmax(raw_preds, axis=1).astype(int).tolist()
+        elif raw_preds.ndim == 1 and len(raw_preds) == n_win * N_CLASSES:
+            # older XGBoost flattens multi:softprob → (n_samples * n_classes,)
+            attack_classes = np.argmax(raw_preds.reshape(n_win, N_CLASSES), axis=1).astype(int).tolist()
         else:
-            attack_classes = np.argmax(raw_preds, axis=1).tolist()
-        attack_labels = [ATTACK_LABELS[i] for i in attack_classes]
+            # multi:softmax → direct class indices
+            attack_classes = raw_preds.astype(int).tolist()
+        attack_labels  = [ATTACK_LABELS[i] for i in attack_classes]
 
-        dominant_class = Counter(attack_classes).most_common(1)[0][0]
+        # Skip startup windows — Kalman filter not yet converged
+        skip = min(50, len(attack_classes) // 4)
+        steady_classes = attack_classes[skip:] if len(attack_classes) > skip else attack_classes
+        dominant_class = Counter(steady_classes).most_common(1)[0][0]
         rul_preds = _predict_rul(feat_df)
 
         # Normalize to 0–100 health index — first window = 100% baseline
@@ -382,12 +390,16 @@ def run_simulation(params: SimulationParams):
             if rul_preds[i] > rul_preds[i - 1]:
                 rul_preds[i] = rul_preds[i - 1]
 
-        summary_b64, waterfall_b64, top_features = _build_shap_images(feat_df, dominant_class)
+        # Limit SHAP to 200 evenly-sampled windows — plots are identical, generation is faster
+        shap_df = feat_df.iloc[::max(1, len(feat_df) // 200)].reset_index(drop=True)
+        summary_b64, waterfall_b64, top_features = _build_shap_images(shap_df, dominant_class)
 
         n_ts, n_win = len(raw_results), len(feat_df)
+        # Window i covers timesteps [i, i+WINDOW_SIZE-1]; first window ends at WINDOW_SIZE-1
+        warmup = n_ts - n_win  # = WINDOW_SIZE - 1 timesteps with no window
         ts_attack, ts_rul = [], []
         for i in range(n_ts):
-            wi = min(int(i * n_win / n_ts), n_win - 1)
+            wi = max(0, min(i - warmup, n_win - 1))
             ts_attack.append(attack_labels[wi])
             ts_rul.append(rul_preds[wi])
 
