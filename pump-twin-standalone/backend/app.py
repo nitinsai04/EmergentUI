@@ -261,6 +261,7 @@ def _run_active_defense(config: dict) -> pd.DataFrame:
     raw_states = sim.run()
     history, buffer = [], []
     omega_prev, b_est = 0.0, 0.1
+    last_valid_speed = 0.0
 
     for idx, t in enumerate(np.arange(0, duration, dt)):
         if idx >= len(raw_states):
@@ -271,8 +272,12 @@ def _run_active_defense(config: dict) -> pd.DataFrame:
         actual    = raw_states[idx].get("omega_true", 0.0)
         voltage   = raw_states[idx].get("voltage", voltage_fixed)
 
-        if z_speed is None or (isinstance(z_speed, float) and np.isnan(z_speed)):
-            z_speed = 0.0
+        # NaN sensor = packet dropout — detect directly, no ML needed
+        is_dropout = z_speed is None or (isinstance(z_speed, float) and np.isnan(z_speed))
+        if is_dropout:
+            z_speed = last_valid_speed
+        else:
+            last_valid_speed = z_speed
         if z_current is None or (isinstance(z_current, float) and np.isnan(z_current)):
             z_current = 0.0
 
@@ -292,9 +297,16 @@ def _run_active_defense(config: dict) -> pd.DataFrame:
             "kalman": float(x_pred[0][0]),
         })
 
-        final_speed, attack_active, current_pred_label = z_speed, False, "Normal"
-
-        if len(buffer) >= 50:
+        if is_dropout:
+            # Packet dropout: sensor is gone — use physics prediction, flag immediately
+            attack_active = True
+            current_pred_label = "Packet Dropout"
+            kf.x = x_pred
+            final_speed = float(kf.x[0][0])
+            if buffer:
+                buffer.pop(0)
+        elif len(buffer) >= 50:
+            final_speed, attack_active, current_pred_label = z_speed, False, "Normal"
             win = pd.DataFrame(buffer[-50:])
             feats = extract_features_from_window(win)
             pred, probs = _booster_predict(feats)
@@ -313,6 +325,7 @@ def _run_active_defense(config: dict) -> pd.DataFrame:
                 b_est, _ = adaptive.update(voltage, z_speed, omega_prev, dt)
             buffer.pop(0)
         else:
+            attack_active, current_pred_label = False, "Normal"
             S = kf.H @ kf.P @ kf.H.T + kf.R
             K_gain = kf.P @ kf.H.T @ np.linalg.inv(S)
             kf.x = x_pred + K_gain * innov
@@ -657,24 +670,38 @@ def run_multi_motor(params: MultiMotorParams):
 
 
 # ── 5. Verification suite ─────────────────────────────────────────────────────
+class VerifyParams(BaseModel):
+    Kt: float = 0.1
+    J: float = 0.01
+    b: float = 0.1
+    voltage: float = 12.0
+    dt: float = 0.02
+    duration: float = 8.0
+    noise_level: float = 0.05
+
 @app.post("/api/verify")
-def run_verification():
+def run_verification(params: VerifyParams = None):
     """
     Runs 5 preset scenarios and returns pass/fail results.
-    Based on run_verification_suite.py logic.
+    Uses physics parameters from the single motor dashboard if provided.
     """
+    if params is None:
+        params = VerifyParams()
     try:
         scenarios = []
         baseline_final_speed = None
 
         def _run(override: dict) -> pd.DataFrame:
             base = {
-                "duration": 8.0, "dt": 0.02,
+                "duration": params.duration, "dt": params.dt,
+                "voltage": params.voltage,
+                "noise_level": params.noise_level,
+                "J": params.J, "b": params.b, "Kt": params.Kt,
                 "attack_type": "Sensor Spoofing",
-                "attack_start_time": 3.0,
+                "attack_start_time": params.duration * 0.375,
                 "attack_magnitude": 10.0,
                 "fault_type": "None",
-                "fault_start_time": 3.0,
+                "fault_start_time": params.duration * 0.25,
             }
             base.update(override)
             return _run_active_defense(base)

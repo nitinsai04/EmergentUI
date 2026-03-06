@@ -65,6 +65,7 @@ export default function Dashboard() {
   const [params, setParams]   = useState(DEFAULT_PARAMS);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [lightMode, setLightMode] = useState(false);
 
   const handleRun = async () => {
     setLoading(true);
@@ -107,7 +108,7 @@ export default function Dashboard() {
   const activeMode = MODES.find((m) => m.id === mode);
 
   return (
-    <div className="h-screen flex flex-col bg-slate-950 text-white">
+    <div className={`h-screen flex flex-col bg-slate-950 text-white${lightMode ? " light-mode" : ""}`}>
 
       {/* Top bar */}
       <header className="shrink-0 border-b border-slate-800 bg-slate-900">
@@ -121,12 +122,21 @@ export default function Dashboard() {
               Physics Simulation · Kalman Filter · XGBoost (5-class) · LSTM RUL · SHAP Explainability
             </p>
           </div>
-          {activeMode && (
-            <div className="hidden md:flex flex-col items-end gap-0.5">
-              <span className="text-xs text-slate-400 font-medium">{activeMode.icon} {activeMode.label}</span>
-              <span className="text-xs text-slate-600">{activeMode.desc}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {activeMode && (
+              <div className="hidden md:flex flex-col items-end gap-0.5">
+                <span className="text-xs text-slate-400 font-medium">{activeMode.icon} {activeMode.label}</span>
+                <span className="text-xs text-slate-600">{activeMode.desc}</span>
+              </div>
+            )}
+            <button
+              onClick={() => setLightMode((v) => !v)}
+              title="Toggle light/dark mode"
+              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full border border-slate-700 hover:border-slate-500 text-slate-400 hover:text-white transition-colors text-sm"
+            >
+              {lightMode ? "🌙" : "☀️"}
+            </button>
+          </div>
         </div>
 
         {/* Architecture pipeline strip */}

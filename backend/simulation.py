@@ -6,11 +6,11 @@ class DigitalTwinSimulation:
         self.duration = params.get("duration", 5.0)
         
         # Physics Parameters
-        self.J = 0.01  # Inertia
-        self.b = 0.1   # Friction
-        self.K = 0.1   # Torque Constant (Should match Ke approx)
-        self.R = 2.0   # Resistance (Ohms) - NEW
-        self.Ke = 0.1  # Back-EMF Constant - NEW
+        self.J  = params.get("J",  0.01)
+        self.b  = params.get("b",  0.1)
+        self.K  = params.get("Kt", 0.1)
+        self.R  = params.get("R",  2.0)
+        self.Ke = params.get("Ke", 0.1)
         
         # State Variables
         # State Variables

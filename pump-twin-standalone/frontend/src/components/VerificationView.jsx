@@ -27,15 +27,40 @@ const SCENARIO_INFO = {
   },
 };
 
+const DEFAULT = {
+  Kt: 0.1, J: 0.01, b: 0.1,
+  voltage: 12.0, dt: 0.02,
+  duration: 8.0, noise_level: 0.05,
+};
+
+const Field = ({ label, hint, children }) => (
+  <div className="space-y-1">
+    <label className="text-xs font-medium text-slate-300 flex justify-between">
+      <span>{label}</span>
+      {hint && <span className="text-slate-500 font-normal">{hint}</span>}
+    </label>
+    {children}
+  </div>
+);
+
+const Num = ({ value, onChange, step = 0.01, min }) => (
+  <input type="number" value={value} step={step} min={min}
+    onChange={(e) => onChange(parseFloat(e.target.value))}
+    className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+);
+
 export default function VerificationView() {
+  const [p, setP]       = useState(DEFAULT);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const set = (key) => (val) => setP((prev) => ({ ...prev, [key]: val }));
 
   const handleRun = async () => {
     setLoading(true);
     setResults(null);
     try {
-      const { data } = await axios.post(`${BACKEND}/api/verify`);
+      const { data } = await axios.post(`${BACKEND}/api/verify`, p);
       setResults(data);
       const { passed, failed } = data.summary;
       if (failed === 0) {
@@ -55,18 +80,45 @@ export default function VerificationView() {
   return (
     <div className="flex flex-col h-full">
       {/* Header bar */}
-      <div className="shrink-0 border-b border-slate-800 bg-slate-900 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-sm font-semibold text-white">Verification Suite</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Runs 5 preset scenarios to validate AI detection + physics fault response
-          </p>
+      <div className="shrink-0 border-b border-slate-800 bg-slate-900 px-6 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white">Verification Suite</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Runs 5 preset scenarios using the motor parameters below
+            </p>
+          </div>
+          <button onClick={handleRun} disabled={loading}
+            className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500
+                       text-white text-sm font-semibold px-5 py-2 rounded transition-colors">
+            {loading ? "Running 5 scenarios…" : "▶ Run All Tests"}
+          </button>
         </div>
-        <button onClick={handleRun} disabled={loading}
-          className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500
-                     text-white text-sm font-semibold px-5 py-2 rounded transition-colors">
-          {loading ? "Running 5 scenarios…" : "▶ Run All Tests"}
-        </button>
+
+        {/* Parameter inputs */}
+        <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
+          <Field label="Voltage (V)" hint="Supply">
+            <Num value={p.voltage} onChange={set("voltage")} step={1} min={1} />
+          </Field>
+          <Field label="Inertia J" hint="kg·m²">
+            <Num value={p.J} onChange={set("J")} step={0.001} min={0.001} />
+          </Field>
+          <Field label="Friction b" hint="coeff">
+            <Num value={p.b} onChange={set("b")} step={0.01} min={0} />
+          </Field>
+          <Field label="Torque Kt" hint="constant">
+            <Num value={p.Kt} onChange={set("Kt")} step={0.01} min={0} />
+          </Field>
+          <Field label="Duration (s)">
+            <Num value={p.duration} onChange={set("duration")} step={1} min={4} />
+          </Field>
+          <Field label="dt (s)" hint="timestep">
+            <Num value={p.dt} onChange={set("dt")} step={0.01} min={0.01} />
+          </Field>
+          <Field label="Noise σ">
+            <Num value={p.noise_level} onChange={set("noise_level")} step={0.01} min={0} />
+          </Field>
+        </div>
       </div>
 
       {/* Content */}
@@ -96,13 +148,11 @@ export default function VerificationView() {
               const passed = s.passed;
               const isError = s.status === "ERROR";
               return (
-                <div
-                  key={s.name}
+                <div key={s.name}
                   className={`border rounded-lg p-4 space-y-2
                     ${isError ? "border-yellow-700 bg-yellow-950/30"
                       : passed ? "border-green-800 bg-green-950/20"
-                               : "border-red-800 bg-red-950/20"}`}
-                >
+                               : "border-red-800 bg-red-950/20"}`}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{info.icon ?? "?"}</span>
@@ -118,7 +168,6 @@ export default function VerificationView() {
                       {s.status}
                     </span>
                   </div>
-
                   {!isError && (
                     <div className="grid grid-cols-2 gap-3 pt-1">
                       <div className="bg-slate-900/60 rounded px-3 py-2">
@@ -133,7 +182,6 @@ export default function VerificationView() {
                       </div>
                     </div>
                   )}
-
                   {isError && (
                     <p className="text-xs text-yellow-400 font-mono">{s.error}</p>
                   )}
@@ -142,10 +190,9 @@ export default function VerificationView() {
             })}
           </div>
         ) : !loading ? (
-          /* Pre-run: show what each scenario does */
           <div className="space-y-3">
             <p className="text-xs text-slate-500">
-              Click <strong>Run All Tests</strong> to execute all 5 scenarios automatically. Each uses a preset configuration and checks a specific pass/fail criterion.
+              Configure motor parameters above, then click <strong>Run All Tests</strong>. Each scenario uses those parameters with a fixed attack/fault configuration.
             </p>
             {Object.entries(SCENARIO_INFO).map(([name, info]) => (
               <div key={name} className="bg-slate-900 border border-slate-800 rounded-lg p-4 flex gap-3">
