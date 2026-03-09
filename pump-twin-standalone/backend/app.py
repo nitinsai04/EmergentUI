@@ -195,10 +195,23 @@ def _shap_from_features(feat_df: pd.DataFrame):
     return shap_vals, base_values
 
 
+FEATURE_LABELS = [
+    "Sensor–Physics Gap (mean)",
+    "Sensor–Physics Gap (std)",
+    "Gap Kurtosis (spikes)",
+    "Gap Crest Factor (worst spike)",
+    "Electrical Mismatch (mean)",
+    "Electrical Mismatch (std)",
+    "Motor Temperature (mean)",
+    "Temperature Trend (slope)",
+    "Mismatch Trend (slope)",
+]
+
 def _build_shap_images(feat_df: pd.DataFrame, predicted_class: int):
     shap_vals, base_vals = _shap_from_features(feat_df)
 
-    shap.summary_plot(shap_vals, feat_df, feature_names=FEATURE_NAMES, show=False)
+    shap.summary_plot(shap_vals, feat_df, feature_names=FEATURE_NAMES,
+                      class_names=ATTACK_LABELS, show=False)
     summary_b64 = _fig_to_b64(plt.gcf())
     plt.close("all")
 
@@ -207,9 +220,13 @@ def _build_shap_images(feat_df: pd.DataFrame, predicted_class: int):
         values        = shap_vals[predicted_class][idx],
         base_values   = base_vals[idx, predicted_class],
         data          = feat_df.iloc[idx].values,
-        feature_names = FEATURE_NAMES,
+        feature_names = FEATURE_LABELS,
     )
     shap.plots.waterfall(explanation, show=False)
+    plt.gcf().suptitle(
+        f"Why the model predicted: {ATTACK_LABELS[predicted_class]}",
+        fontsize=10, y=1.01
+    )
     waterfall_b64 = _fig_to_b64(plt.gcf())
     plt.close("all")
 
