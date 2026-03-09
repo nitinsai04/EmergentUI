@@ -215,7 +215,11 @@ def _build_shap_images(feat_df: pd.DataFrame, predicted_class: int):
     summary_b64 = _fig_to_b64(plt.gcf())
     plt.close("all")
 
-    idx = len(feat_df) - 1
+    # Use the window with highest confidence for the predicted class
+    probs = booster.predict(xgb.DMatrix(feat_df.values, feature_names=FEATURE_NAMES))
+    probs = probs.reshape(len(feat_df), N_CLASSES)
+    idx = int(np.argmax(probs[:, predicted_class]))
+
     explanation = shap.Explanation(
         values        = shap_vals[predicted_class][idx],
         base_values   = base_vals[idx, predicted_class],
