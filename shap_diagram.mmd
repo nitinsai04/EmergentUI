@@ -1,0 +1,31 @@
+flowchart LR
+    subgraph INPUT["Input Features  (9 total)"]
+        direction TB
+        F1["Kalman Innovations<br/>innov_mean · innov_std<br/>innov_kurtosis · innov_crest"]
+        F2["Physics Residuals<br/>fusion_res_mean · fusion_res_std"]
+        F3["Temperature<br/>temp_mean · temp_slope"]
+        F4["Trend<br/>res_slope"]
+    end
+
+    subgraph SHAP["SHAP Calculation"]
+        direction TB
+        S1["XGBoost TreeSHAP<br/>pred_contribs=True"]
+        S2["Output shape<br/>5 classes × 9 features"]
+        S1 --> S2
+    end
+
+    subgraph OUTPUTS["Outputs"]
+        direction TB
+        G["Global Explanation<br/>shap.summary_plot<br/>Feature importance across all windows"]
+        L["Local Explanation<br/>shap.plots.waterfall<br/>Per-feature contribution for<br/>dominant predicted class"]
+        T["Top Features<br/>Sorted SHAP values<br/>returned as JSON to frontend"]
+        G --> L --> T
+    end
+
+    subgraph CLASSES["5 Classes XGBoost Detects"]
+        C["Normal  |  Mechanical Fault  |  Sensor Spoofing  |  Packet Dropout  |  Freezing Sensor"]
+    end
+
+    INPUT --> SHAP
+    SHAP --> OUTPUTS
+    SHAP -.->|explains predictions for| CLASSES
